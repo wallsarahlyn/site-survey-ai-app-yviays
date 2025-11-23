@@ -18,57 +18,17 @@ import { getTheme, spacing, borderRadius, typography } from '@/styles/commonStyl
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '@/app/integrations/supabase/client';
+import { SampleReportCard } from '@/components/landing/SampleReportCard';
+import { StepCard } from '@/components/landing/StepCard';
+import { PricingCard } from '@/components/landing/PricingCard';
+import { BulkPackCard } from '@/components/landing/BulkPackCard';
+import { WhoItsForCard } from '@/components/landing/WhoItsForCard';
+import { FAQItem } from '@/components/landing/FAQItem';
 
 const { width: screenWidth } = Dimensions.get('window');
-const isWeb = Platform.OS === 'web';
 const isMobile = screenWidth < 768;
 
 const SUPABASE_URL = "https://xnmhalybnxbvfaausuru.supabase.co";
-
-interface PricingCardProps {
-  title: string;
-  price: string;
-  tagline: string;
-  features: string[];
-  buttonText: string;
-  isPopular?: boolean;
-  onPress: () => void;
-}
-
-interface BulkPackCardProps {
-  title: string;
-  reports: string;
-  price: string;
-  perReport: string;
-  description: string;
-  onPress: () => void;
-}
-
-interface StepCardProps {
-  stepNumber: string;
-  title: string;
-  description: string;
-  icon: string;
-}
-
-interface WhoItsForCardProps {
-  title: string;
-  description: string;
-  icon: string;
-}
-
-interface FAQItemProps {
-  question: string;
-  answer: string;
-}
-
-interface SampleReportCardProps {
-  title: string;
-  description: string;
-  reportType: 'basic' | 'pro' | 'premium';
-  icon: string;
-  onPress: () => void;
-}
 
 export default function LandingPage() {
   const { mode } = useTheme();
@@ -79,12 +39,10 @@ export default function LandingPage() {
 
   const handleBuyReport = (reportType: string) => {
     console.log(`Buy ${reportType} report clicked`);
-    // TODO: Implement purchase flow
   };
 
   const handleBuyBulkCredits = () => {
     console.log('Buy bulk credits clicked');
-    // TODO: Implement bulk purchase flow
   };
 
   const handleSeeSample = () => {
@@ -98,7 +56,6 @@ export default function LandingPage() {
     try {
       console.log(`Generating sample ${reportType} report...`);
 
-      // Check authentication
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         alert('Please sign in to view sample reports');
@@ -106,11 +63,9 @@ export default function LandingPage() {
         return;
       }
 
-      // Get the auth token
       const token = session.access_token;
       console.log('Auth token obtained');
 
-      // Call the Edge Function to generate sample PDF
       const url = `${SUPABASE_URL}/functions/v1/generate-sample-report`;
       console.log('Calling Edge Function:', url);
 
@@ -133,11 +88,9 @@ export default function LandingPage() {
 
       console.log('Sample report generated successfully');
 
-      // Get the PDF as an ArrayBuffer
       const arrayBuffer = await response.arrayBuffer();
       console.log('PDF size:', arrayBuffer.byteLength);
       
-      // Convert ArrayBuffer to base64
       const uint8Array = new Uint8Array(arrayBuffer);
       let binary = '';
       for (let i = 0; i < uint8Array.length; i++) {
@@ -145,20 +98,17 @@ export default function LandingPage() {
       }
       const base64 = btoa(binary);
 
-      // Create a file URI
       const fileName = `sample-${reportType}-report.pdf`;
       const fileUri = `${FileSystem.documentDirectory}${fileName}`;
 
       console.log('Saving PDF to:', fileUri);
 
-      // Write the file
       await FileSystem.writeAsStringAsync(fileUri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
       console.log('Sample PDF saved successfully');
 
-      // Share the PDF
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/pdf',
@@ -186,7 +136,6 @@ export default function LandingPage() {
       style={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
     >
-      {/* Hero Section */}
       <LinearGradient
         colors={[colors.primary, colors.accent]}
         style={styles.heroSection}
@@ -223,7 +172,6 @@ export default function LandingPage() {
             No subscription required. Pay per report or save with bulk credits.
           </Text>
 
-          {/* Mockup Visual */}
           <View style={styles.mockupContainer}>
             <IconSymbol
               ios_icon_name="doc.text.fill"
@@ -238,7 +186,6 @@ export default function LandingPage() {
         </View>
       </LinearGradient>
 
-      {/* Sample Reports Section */}
       <View style={[styles.section, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           View Sample Reports
@@ -274,7 +221,6 @@ export default function LandingPage() {
         </View>
       </View>
 
-      {/* How It Works Section */}
       <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           How It Works
@@ -302,7 +248,6 @@ export default function LandingPage() {
         </View>
       </View>
 
-      {/* Report Types & Pricing Section */}
       <View style={[styles.section, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Choose the Report You Need
@@ -356,7 +301,6 @@ export default function LandingPage() {
         </View>
       </View>
 
-      {/* Bulk Pricing Section */}
       <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Save with Bulk Report Credits
@@ -406,7 +350,6 @@ export default function LandingPage() {
         </TouchableOpacity>
       </View>
 
-      {/* Who It's For Section */}
       <View style={[styles.section, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Who It&apos;s For
@@ -431,7 +374,6 @@ export default function LandingPage() {
         </View>
       </View>
 
-      {/* FAQ Section */}
       <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Frequently Asked Questions
@@ -465,7 +407,6 @@ export default function LandingPage() {
         </View>
       </View>
 
-      {/* Final CTA Section */}
       <LinearGradient
         colors={[colors.primary, colors.accent]}
         style={styles.ctaSection}
@@ -487,7 +428,6 @@ export default function LandingPage() {
         </TouchableOpacity>
       </LinearGradient>
 
-      {/* Sample Report Modal */}
       <Modal
         visible={sampleModalVisible}
         transparent
@@ -536,7 +476,6 @@ export default function LandingPage() {
         </View>
       </Modal>
 
-      {/* Loading Overlay */}
       {isGeneratingSample && (
         <View style={styles.loadingOverlay}>
           <View style={[styles.loadingContent, { backgroundColor: colors.cardBackground }]}>
@@ -548,207 +487,8 @@ export default function LandingPage() {
         </View>
       )}
 
-      {/* Bottom padding to avoid tab bar overlap */}
       <View style={{ height: 100 }} />
     </ScrollView>
-  );
-}
-
-// Sample Report Card Component
-function SampleReportCard({ title, description, reportType, icon, onPress }: SampleReportCardProps) {
-  const { mode } = useTheme();
-  const colors = getTheme(mode);
-
-  return (
-    <TouchableOpacity
-      style={[styles.sampleReportCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.sampleReportIconContainer, { backgroundColor: `${colors.primary}15` }]}>
-        <IconSymbol
-          ios_icon_name={icon}
-          android_material_icon_name={icon}
-          size={40}
-          color={colors.primary}
-        />
-      </View>
-      <Text style={[styles.sampleReportTitle, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.sampleReportDescription, { color: colors.textSecondary }]}>
-        {description}
-      </Text>
-      <View style={[styles.sampleReportButton, { backgroundColor: colors.primary }]}>
-        <Text style={styles.sampleReportButtonText}>View Sample</Text>
-        <IconSymbol
-          ios_icon_name="arrow.right"
-          android_material_icon_name="arrow_forward"
-          size={16}
-          color="#FFFFFF"
-        />
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// Step Card Component
-function StepCard({ stepNumber, title, description, icon }: StepCardProps) {
-  const { mode } = useTheme();
-  const colors = getTheme(mode);
-
-  return (
-    <View style={[styles.stepCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-      <View style={[styles.stepNumberBadge, { backgroundColor: colors.primary }]}>
-        <Text style={styles.stepNumberText}>{stepNumber}</Text>
-      </View>
-      <IconSymbol
-        ios_icon_name={icon}
-        android_material_icon_name={icon}
-        size={48}
-        color={colors.primary}
-      />
-      <Text style={[styles.stepTitle, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
-        {description}
-      </Text>
-    </View>
-  );
-}
-
-// Pricing Card Component
-function PricingCard({
-  title,
-  price,
-  tagline,
-  features,
-  buttonText,
-  isPopular,
-  onPress,
-}: PricingCardProps) {
-  const { mode } = useTheme();
-  const colors = getTheme(mode);
-
-  return (
-    <View style={[
-      styles.pricingCard,
-      { backgroundColor: colors.cardBackground, borderColor: isPopular ? colors.primary : colors.border },
-      isPopular && styles.popularCard,
-    ]}>
-      {isPopular && (
-        <View style={[styles.popularBadge, { backgroundColor: colors.primary }]}>
-          <Text style={styles.popularBadgeText}>Most Popular</Text>
-        </View>
-      )}
-      
-      <Text style={[styles.pricingTitle, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.pricingPrice, { color: colors.primary }]}>{price}</Text>
-      <Text style={[styles.pricingTagline, { color: colors.textSecondary }]}>
-        {tagline}
-      </Text>
-      
-      <View style={styles.featuresContainer}>
-        {features.map((feature, index) => (
-          <React.Fragment key={index}>
-          <View style={styles.featureRow}>
-            <IconSymbol
-              ios_icon_name="checkmark.circle.fill"
-              android_material_icon_name="check_circle"
-              size={20}
-              color={colors.primary}
-            />
-            <Text style={[styles.featureText, { color: colors.text }]}>{feature}</Text>
-          </View>
-          </React.Fragment>
-        ))}
-      </View>
-      
-      <TouchableOpacity
-        style={[styles.pricingButton, { backgroundColor: colors.primary }]}
-        onPress={onPress}
-      >
-        <Text style={styles.pricingButtonText}>{buttonText}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-// Bulk Pack Card Component
-function BulkPackCard({
-  title,
-  reports,
-  price,
-  perReport,
-  description,
-  onPress,
-}: BulkPackCardProps) {
-  const { mode } = useTheme();
-  const colors = getTheme(mode);
-
-  return (
-    <TouchableOpacity
-      style={[styles.bulkPackCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text style={[styles.bulkPackTitle, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.bulkPackReports, { color: colors.primary }]}>{reports}</Text>
-      <Text style={[styles.bulkPackPrice, { color: colors.text }]}>{price}</Text>
-      <Text style={[styles.bulkPackPerReport, { color: colors.textSecondary }]}>
-        {perReport}
-      </Text>
-      <Text style={[styles.bulkPackDescription, { color: colors.textSecondary }]}>
-        {description}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-// Who It's For Card Component
-function WhoItsForCard({ title, description, icon }: WhoItsForCardProps) {
-  const { mode } = useTheme();
-  const colors = getTheme(mode);
-
-  return (
-    <View style={[styles.whoItsForCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-      <View style={[styles.whoItsForIconContainer, { backgroundColor: `${colors.primary}15` }]}>
-        <IconSymbol
-          ios_icon_name={icon}
-          android_material_icon_name={icon}
-          size={40}
-          color={colors.primary}
-        />
-      </View>
-      <Text style={[styles.whoItsForTitle, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.whoItsForDescription, { color: colors.textSecondary }]}>
-        {description}
-      </Text>
-    </View>
-  );
-}
-
-// FAQ Item Component
-function FAQItem({ question, answer, isExpanded, onToggle }: FAQItemProps & { isExpanded: boolean; onToggle: () => void }) {
-  const { mode } = useTheme();
-  const colors = getTheme(mode);
-
-  return (
-    <TouchableOpacity
-      style={[styles.faqItem, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
-      onPress={onToggle}
-      activeOpacity={0.7}
-    >
-      <View style={styles.faqHeader}>
-        <Text style={[styles.faqQuestion, { color: colors.text }]}>{question}</Text>
-        <IconSymbol
-          ios_icon_name={isExpanded ? 'chevron.up' : 'chevron.down'}
-          android_material_icon_name={isExpanded ? 'expand_less' : 'expand_more'}
-          size={24}
-          color={colors.textSecondary}
-        />
-      </View>
-      {isExpanded && (
-        <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>{answer}</Text>
-      )}
-    </TouchableOpacity>
   );
 }
 
@@ -756,8 +496,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  
-  // Hero Section
   heroSection: {
     paddingTop: Platform.OS === 'android' ? 60 : 40,
     paddingHorizontal: spacing.lg,
@@ -844,8 +582,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     color: 'rgba(255, 255, 255, 0.85)',
   },
-  
-  // Section Styles
   section: {
     paddingVertical: spacing.xl * 2,
     paddingHorizontal: spacing.lg,
@@ -862,200 +598,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
-  
-  // Sample Reports
   sampleReportsContainer: {
     flexDirection: isMobile ? 'column' : 'row',
     gap: spacing.lg,
     maxWidth: 1200,
     width: '100%',
   },
-  sampleReportCard: {
-    flex: 1,
-    padding: spacing.xl,
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
-    minHeight: 280,
-  },
-  sampleReportIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  sampleReportTitle: {
-    ...typography.h3,
-    marginBottom: spacing.sm,
-  },
-  sampleReportDescription: {
-    ...typography.body,
-    lineHeight: 22,
-    marginBottom: spacing.lg,
-    flex: 1,
-  },
-  sampleReportButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-  },
-  sampleReportButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  
-  // How It Works
   stepsContainer: {
     flexDirection: isMobile ? 'column' : 'row',
     gap: spacing.lg,
     maxWidth: 1200,
     width: '100%',
   },
-  stepCard: {
-    flex: 1,
-    padding: spacing.xl,
-    borderRadius: borderRadius.xl,
-    alignItems: 'center',
-    minHeight: 280,
-    borderWidth: 1,
-  },
-  stepNumberBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  stepNumberText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  stepTitle: {
-    ...typography.h3,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  stepDescription: {
-    ...typography.body,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  
-  // Pricing Cards
   pricingCardsContainer: {
     flexDirection: isMobile ? 'column' : 'row',
     gap: spacing.lg,
     maxWidth: 1200,
     width: '100%',
   },
-  pricingCard: {
-    flex: 1,
-    padding: spacing.xl,
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
-    minHeight: 500,
-  },
-  popularCard: {
-    borderWidth: 3,
-    transform: isMobile ? [] : [{ scale: 1.05 }],
-  },
-  popularBadge: {
-    position: 'absolute',
-    top: -12,
-    alignSelf: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.lg,
-  },
-  popularBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  pricingTitle: {
-    ...typography.h3,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  pricingPrice: {
-    fontSize: 36,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  pricingTagline: {
-    ...typography.caption,
-    marginBottom: spacing.lg,
-  },
-  featuresContainer: {
-    flex: 1,
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  featureText: {
-    ...typography.body,
-    flex: 1,
-  },
-  pricingButton: {
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-  },
-  pricingButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  
-  // Bulk Packs
   bulkPacksContainer: {
     flexDirection: isMobile ? 'column' : 'row',
     gap: spacing.lg,
     maxWidth: 1200,
     width: '100%',
     marginBottom: spacing.lg,
-  },
-  bulkPackCard: {
-    flex: 1,
-    padding: spacing.xl,
-    borderRadius: borderRadius.xl,
-    borderWidth: 2,
-    alignItems: 'center',
-    minHeight: 220,
-  },
-  bulkPackTitle: {
-    ...typography.h3,
-    marginBottom: spacing.sm,
-  },
-  bulkPackReports: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  bulkPackPrice: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  bulkPackPerReport: {
-    ...typography.body,
-    marginBottom: spacing.sm,
-  },
-  bulkPackDescription: {
-    ...typography.caption,
-    textAlign: 'center',
   },
   creditsNote: {
     ...typography.caption,
@@ -1074,70 +640,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  
-  // Who It's For
   whoItsForContainer: {
     flexDirection: isMobile ? 'column' : 'row',
     gap: spacing.lg,
     maxWidth: 1200,
     width: '100%',
   },
-  whoItsForCard: {
-    flex: 1,
-    padding: spacing.xl,
-    borderRadius: borderRadius.xl,
-    alignItems: 'center',
-    minHeight: 220,
-    borderWidth: 1,
-  },
-  whoItsForIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  whoItsForTitle: {
-    ...typography.h3,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  whoItsForDescription: {
-    ...typography.body,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  
-  // FAQ
   faqContainer: {
     gap: spacing.md,
     maxWidth: 800,
     width: '100%',
   },
-  faqItem: {
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-  },
-  faqHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  faqQuestion: {
-    ...typography.body,
-    fontWeight: '600',
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  faqAnswer: {
-    ...typography.body,
-    marginTop: spacing.md,
-    lineHeight: 24,
-  },
-  
-  // Final CTA
   ctaSection: {
     paddingVertical: spacing.xl * 2,
     paddingHorizontal: spacing.lg,
@@ -1170,8 +683,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -1218,8 +729,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  
-  // Loading Overlay
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',

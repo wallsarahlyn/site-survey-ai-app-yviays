@@ -1,162 +1,62 @@
+// styles.ts
+// Uinspect – Neural Blue Tech Theme
 
-export type ThemeMode = 'light' | 'dark' | 'field';
+export type UinspectColorKey =
+  | "primary"
+  | "primaryDark"
+  | "primarySoft"
+  | "bgRoot"
+  | "bgElevated"
+  | "bgSubtle"
+  | "bgLight"
+  | "textMain"
+  | "textMuted"
+  | "textInverse"
+  | "borderSubtle"
+  | "borderStrong"
+  | "divider"
+  | "accentTeal"
+  | "accentCyanSoft"
+  | "success"
+  | "successSoft"
+  | "warning"
+  | "warningSoft"
+  | "error"
+  | "errorSoft";
 
-// Enhanced Professional Color Theme Palette
-// Primary: Deep Orange (#FF5722) - Professional contractor orange
-// Secondary: Slate Blue (#4A5568) - Professional neutral
-// Accent: Vibrant Orange (#FF6B35) - Energetic highlight
-// Background: Clean whites and grays for professionalism
-// Success: Professional Green (#10B981)
-// Warning: Amber (#F59E0B)
+export const colors: Record<UinspectColorKey, string> = {
+  // Brand / primary blues
+  primary: "#007BFF",
+  primaryDark: "#005FCC",
+  primarySoft: "#2E8FFF",
 
-export const colors = {
-  // Primary colors - Professional Deep Orange
-  primary: '#FF5722', // Deep Orange - Primary CTA
-  primaryLight: '#FF7043', // Lighter orange for hover states
-  primaryDark: '#E64A19', // Darker orange for pressed states
-  
-  // Secondary colors - Professional Slate
-  secondary: '#4A5568', // Slate gray for secondary elements
-  secondaryLight: '#64748B', // Lighter slate
-  secondaryDark: '#334155', // Darker slate
-  
-  // Accent colors
-  accent: '#FF6B35', // Vibrant orange for highlights
-  accentLight: '#FF8C61', // Lighter accent
-  
-  // Status colors
-  success: '#10B981', // Professional green
-  error: '#EF4444', // Professional red
-  warning: '#F59E0B', // Amber warning
-  info: '#3B82F6', // Professional blue
-  
-  // Background colors - Clean and professional
-  background: '#FFFFFF', // Pure white
-  backgroundSecondary: '#F8FAFC', // Very light gray
-  cardBackground: '#FFFFFF', // White cards
-  
-  // Text colors
-  text: '#1E293B', // Dark slate for primary text
-  textSecondary: '#64748B', // Medium slate for secondary text
-  textTertiary: '#94A3B8', // Light slate for tertiary text
-  
-  // Border colors
-  border: '#E2E8F0', // Light border
-  borderDark: '#CBD5E1', // Darker border
-  
-  // Navigation colors
-  navigationBackground: '#FFFFFF', // White navigation
-  tabBarBackground: '#FFFFFF', // White tab bar
-  
-  // Additional colors
-  card: '#FFFFFF',
-  notification: '#EF4444',
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  
-  // Shadows
-  shadowLight: 'rgba(0, 0, 0, 0.05)',
-  shadowMedium: 'rgba(0, 0, 0, 0.1)',
-  shadowDark: 'rgba(0, 0, 0, 0.15)',
-};
+  // Backgrounds (dark UI)
+  bgRoot: "#0C0E14",
+  bgElevated: "#1A1F2B",
+  bgSubtle: "#2A2F3C",
+  bgLight: "#F5F7FA", // for light surfaces like PDFs/marketing
 
-export const darkColors = {
-  // Primary colors - Deep Orange (consistent across themes)
-  primary: '#FF5722',
-  primaryLight: '#FF7043',
-  primaryDark: '#E64A19',
-  
-  // Secondary colors - Lighter slate for dark mode
-  secondary: '#64748B',
-  secondaryLight: '#94A3B8',
-  secondaryDark: '#475569',
-  
-  // Accent colors
-  accent: '#FF6B35',
-  accentLight: '#FF8C61',
-  
-  // Status colors
-  success: '#10B981',
-  error: '#EF4444',
-  warning: '#F59E0B',
-  info: '#3B82F6',
-  
-  // Background colors - Professional dark
-  background: '#0F172A', // Dark slate
-  backgroundSecondary: '#1E293B', // Lighter dark slate
-  cardBackground: '#1E293B', // Card background
-  
-  // Text colors
-  text: '#F1F5F9', // Light text
-  textSecondary: '#CBD5E1', // Medium light text
-  textTertiary: '#94A3B8', // Tertiary text
-  
-  // Border colors
-  border: '#334155', // Dark border
-  borderDark: '#475569', // Darker border
-  
-  // Navigation colors
-  navigationBackground: '#1E293B',
-  tabBarBackground: '#1E293B',
-  
-  // Additional colors
-  card: '#1E293B',
-  notification: '#EF4444',
-  overlay: 'rgba(0, 0, 0, 0.7)',
-  
-  // Shadows
-  shadowLight: 'rgba(0, 0, 0, 0.2)',
-  shadowMedium: 'rgba(0, 0, 0, 0.3)',
-  shadowDark: 'rgba(0, 0, 0, 0.4)',
-};
+  // Text
+  textMain: "#F9FAFF",
+  textMuted: "#A7B0C3",
+  textInverse: "#0C0E14",
 
-export const fieldColors = {
-  // Primary colors - High contrast for outdoor
-  primary: '#FF5722',
-  primaryLight: '#FF7043',
-  primaryDark: '#E64A19',
-  
-  // Secondary colors
-  secondary: '#64748B',
-  secondaryLight: '#94A3B8',
-  secondaryDark: '#475569',
-  
-  // Accent colors - High visibility
-  accent: '#FF6B35',
-  accentLight: '#FF8C61',
-  
-  // Status colors - High contrast
-  success: '#10B981',
-  error: '#EF4444',
-  warning: '#F59E0B',
-  info: '#3B82F6',
-  
-  // Background colors - Slightly darker for outdoor visibility
-  background: '#F8FAFC',
-  backgroundSecondary: '#E2E8F0',
-  cardBackground: '#FFFFFF',
-  
-  // Text colors - High contrast
-  text: '#0F172A',
-  textSecondary: '#475569',
-  textTertiary: '#64748B',
-  
-  // Border colors
-  border: '#CBD5E1',
-  borderDark: '#94A3B8',
-  
-  // Navigation colors
-  navigationBackground: '#FFFFFF',
-  tabBarBackground: '#FFFFFF',
-  
-  // Additional colors
-  card: '#FFFFFF',
-  notification: '#EF4444',
-  overlay: 'rgba(0, 0, 0, 0.6)',
-  
-  // Shadows
-  shadowLight: 'rgba(0, 0, 0, 0.1)',
-  shadowMedium: 'rgba(0, 0, 0, 0.15)',
-  shadowDark: 'rgba(0, 0, 0, 0.2)',
+  // Borders / dividers
+  borderSubtle: "#3C4250",
+  borderStrong: "#565D6D",
+  divider: "#262C38",
+
+  // Accents / AI
+  accentTeal: "#00E5FF",
+  accentCyanSoft: "#4DE7FF",
+
+  // Status
+  success: "#28D890",
+  successSoft: "#173B2C",
+  warning: "#FFC845",
+  warningSoft: "#3B3118",
+  error: "#FF4F4F",
+  errorSoft: "#3A2224",
 };
 
 export const spacing = {
@@ -165,67 +65,152 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
-  xxl: 48,
 };
 
-export const borderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  full: 9999,
+export const radii = {
+  sm: 6,
+  md: 8,
+  lg: 12,
+  pill: 999,
 };
 
-export const typography = {
-  h1: {
-    fontSize: 32,
-    fontWeight: '700' as const,
+export const shadows = {
+  card: "0 10px 30px rgba(0, 0, 0, 0.25)",
+  elevated: "0 14px 40px rgba(0, 0, 0, 0.35)",
+};
+
+export type TypographyVariant =
+  | "display"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "bodyLg"
+  | "body"
+  | "label";
+
+export interface TypographyStyle {
+  fontSize: number;
+  lineHeight: number;
+  fontWeight: "400" | "500" | "600" | "700";
+}
+
+export const typography: Record<TypographyVariant, TypographyStyle> = {
+  display: {
+    fontSize: 34,
     lineHeight: 40,
-    letterSpacing: -0.5,
+    fontWeight: "600",
+  },
+  h1: {
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "600",
   },
   h2: {
     fontSize: 24,
-    fontWeight: '700' as const,
-    lineHeight: 32,
-    letterSpacing: -0.3,
+    lineHeight: 30,
+    fontWeight: "600",
   },
   h3: {
     fontSize: 20,
-    fontWeight: '600' as const,
-    lineHeight: 28,
-    letterSpacing: -0.2,
+    lineHeight: 26,
+    fontWeight: "600",
+  },
+  bodyLg: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "400",
   },
   body: {
-    fontSize: 16,
-    fontWeight: '400' as const,
-    lineHeight: 24,
-  },
-  bodyMedium: {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    lineHeight: 24,
-  },
-  caption: {
     fontSize: 14,
-    fontWeight: '400' as const,
     lineHeight: 20,
+    fontWeight: "400",
   },
-  small: {
+  label: {
     fontSize: 12,
-    fontWeight: '400' as const,
     lineHeight: 16,
+    fontWeight: "500",
   },
 };
 
-export function getTheme(mode: ThemeMode) {
-  switch (mode) {
-    case 'dark':
-      return darkColors;
-    case 'field':
-      return fieldColors;
-    case 'light':
-    default:
-      return colors;
-  }
-}
+// Common component tokens – handy if you use styled-components or RN StyleSheet
+
+export const components = {
+  buttonPrimary: {
+    backgroundColor: colors.primary,
+    color: colors.textMain,
+    borderRadius: radii.md,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    fontSize: typography.body.fontSize,
+    fontWeight: typography.label.fontWeight,
+  },
+  buttonSecondary: {
+    backgroundColor: "transparent",
+    color: colors.textMain,
+    borderColor: colors.borderStrong,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    fontSize: typography.body.fontSize,
+    fontWeight: typography.label.fontWeight,
+  },
+  card: {
+    backgroundColor: colors.bgElevated,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    boxShadow: shadows.card,
+    borderColor: "rgba(255,255,255,0.03)",
+    borderWidth: 1,
+  },
+  input: {
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.borderSubtle,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    color: colors.textMain,
+    placeholderColor: colors.textMuted,
+    fontSize: typography.body.fontSize,
+  },
+  chipSeverityLow: {
+    backgroundColor: "rgba(40,216,144,0.12)",
+    color: colors.success,
+    borderRadius: radii.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    fontSize: typography.label.fontSize,
+    fontWeight: typography.label.fontWeight,
+  },
+  chipSeverityMedium: {
+    backgroundColor: "rgba(255,200,69,0.14)",
+    color: colors.warning,
+    borderRadius: radii.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    fontSize: typography.label.fontSize,
+    fontWeight: typography.label.fontWeight,
+  },
+  chipSeverityHigh: {
+    backgroundColor: "rgba(255,79,79,0.14)",
+    color: colors.error,
+    borderRadius: radii.pill,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    fontSize: typography.label.fontSize,
+    fontWeight: typography.label.fontWeight,
+  },
+};
+
+// Single theme object if you like importing one thing
+export const UinspectTheme = {
+  colors,
+  spacing,
+  radii,
+  shadows,
+  typography,
+  components,
+};
+
+export type UinspectThemeType = typeof UinspectTheme;
