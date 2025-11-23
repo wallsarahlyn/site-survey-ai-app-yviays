@@ -1,289 +1,439 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { colors } from '@/styles/commonStyles';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { IconSymbol } from '@/components/IconSymbol';
+import { useThemeContext } from '@/contexts/ThemeContext';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
+  const { colors, mode, setMode } = useThemeContext();
+  const router = useRouter();
+
+  const settingsSections = [
+    {
+      title: 'Appearance',
+      items: [
+        {
+          id: 'theme',
+          label: 'Theme Mode',
+          icon: 'paintbrush.fill',
+          iconAndroid: 'palette',
+          type: 'select' as const,
+          value: mode,
+          options: [
+            { label: 'Light Mode', value: 'light' },
+            { label: 'Dark Mode', value: 'dark' },
+            { label: 'Field Mode (High Visibility)', value: 'field' },
+          ],
+        },
+      ],
+    },
+    {
+      title: 'Account',
+      items: [
+        {
+          id: 'profile',
+          label: 'Profile Settings',
+          icon: 'person.circle.fill',
+          iconAndroid: 'account_circle',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'team',
+          label: 'Team Management',
+          icon: 'person.2.fill',
+          iconAndroid: 'people',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'permissions',
+          label: 'Permissions',
+          icon: 'lock.fill',
+          iconAndroid: 'lock',
+          type: 'navigation' as const,
+        },
+      ],
+    },
+    {
+      title: 'Business',
+      items: [
+        {
+          id: 'branding',
+          label: 'Branding Settings',
+          icon: 'paintpalette.fill',
+          iconAndroid: 'color_lens',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'measurements',
+          label: 'Measurement Settings',
+          icon: 'ruler.fill',
+          iconAndroid: 'straighten',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'subscription',
+          label: 'Subscription',
+          icon: 'creditcard.fill',
+          iconAndroid: 'credit_card',
+          type: 'navigation' as const,
+        },
+      ],
+    },
+    {
+      title: 'Data',
+      items: [
+        {
+          id: 'storage',
+          label: 'Cloud Storage',
+          icon: 'icloud.fill',
+          iconAndroid: 'cloud',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'export',
+          label: 'Export Data',
+          icon: 'square.and.arrow.up.fill',
+          iconAndroid: 'upload',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'backup',
+          label: 'Backup & Restore',
+          icon: 'arrow.clockwise.circle.fill',
+          iconAndroid: 'backup',
+          type: 'navigation' as const,
+        },
+      ],
+    },
+    {
+      title: 'Support',
+      items: [
+        {
+          id: 'help',
+          label: 'Help Center',
+          icon: 'questionmark.circle.fill',
+          iconAndroid: 'help',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'contact',
+          label: 'Contact Support',
+          icon: 'envelope.fill',
+          iconAndroid: 'email',
+          type: 'navigation' as const,
+        },
+        {
+          id: 'about',
+          label: 'About TechOps Pro',
+          icon: 'info.circle.fill',
+          iconAndroid: 'info',
+          type: 'navigation' as const,
+        },
+      ],
+    },
+  ];
+
+  const handleThemeChange = () => {
+    Alert.alert(
+      'Select Theme',
+      'Choose your preferred theme mode',
+      [
+        {
+          text: 'Light Mode',
+          onPress: () => setMode('light'),
+        },
+        {
+          text: 'Dark Mode',
+          onPress: () => setMode('dark'),
+        },
+        {
+          text: 'Field Mode',
+          onPress: () => setMode('field'),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const getThemeLabel = () => {
+    switch (mode) {
+      case 'light': return 'Light Mode';
+      case 'dark': return 'Dark Mode';
+      case 'field': return 'Field Mode';
+      default: return 'Light Mode';
+    }
+  };
+
+  const styles = createStyles(colors);
+
   return (
-    <View style={styles.container}>
-      <ScrollView 
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
         <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <IconSymbol 
-              ios_icon_name="person.circle.fill" 
-              android_material_icon_name="account_circle" 
-              size={80} 
-              color={colors.primary} 
-            />
+          <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
+            <Text style={styles.avatarText}>TP</Text>
           </View>
-          <Text style={styles.name}>Inspector Pro</Text>
-          <Text style={styles.email}>inspector@example.com</Text>
+          <Text style={[styles.name, { color: colors.text }]}>TechOps Pro</Text>
+          <Text style={[styles.email, { color: colors.textSecondary }]}>
+            admin@techopspro.com
+          </Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About This App</Text>
-          <View style={styles.card}>
-            <Text style={styles.cardText}>
-              This AI-powered property inspection app helps you analyze residential and commercial properties 
-              for roof damage, structural issues, and solar compatibility.
+        {/* Quick Stats */}
+        <View style={styles.statsContainer}>
+          <View style={[styles.statCard, { backgroundColor: colors.card }]}>
+            <Text style={[styles.statValue, { color: colors.accent }]}>127</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+              Inspections
+            </Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: colors.card }]}>
+            <Text style={[styles.statValue, { color: colors.success }]}>$2.4M</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+              Revenue
+            </Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: colors.card }]}>
+            <Text style={[styles.statValue, { color: colors.primary }]}>94%</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+              Close Rate
             </Text>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Features</Text>
-          
-          <View style={styles.featureCard}>
-            <IconSymbol 
-              ios_icon_name="camera.fill" 
-              android_material_icon_name="camera_alt" 
-              size={24} 
-              color={colors.primary} 
-            />
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Photo Upload & Analysis</Text>
-              <Text style={styles.featureDescription}>
-                Upload multiple site photos for comprehensive AI analysis
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.featureCard}>
-            <IconSymbol 
-              ios_icon_name="sparkles" 
-              android_material_icon_name="auto_awesome" 
-              size={24} 
-              color={colors.primary} 
-            />
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>AI-Powered Detection</Text>
-              <Text style={styles.featureDescription}>
-                Detect roof damage, structural issues, and solar compatibility
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.featureCard}>
-            <IconSymbol 
-              ios_icon_name="pencil.and.scribble" 
-              android_material_icon_name="draw" 
-              size={24} 
-              color={colors.primary} 
-            />
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Roof Drawing Tool</Text>
-              <Text style={styles.featureDescription}>
-                Draw and measure roof facets with automatic calculations
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.featureCard}>
-            <IconSymbol 
-              ios_icon_name="doc.fill" 
-              android_material_icon_name="description" 
-              size={24} 
-              color={colors.primary} 
-            />
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>PDF Reports</Text>
-              <Text style={styles.featureDescription}>
-                Generate professional inspection reports with quotes
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.featureCard}>
-            <IconSymbol 
-              ios_icon_name="dollarsign.circle.fill" 
-              android_material_icon_name="attach_money" 
-              size={24} 
-              color={colors.primary} 
-            />
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Instant Quotes</Text>
-              <Text style={styles.featureDescription}>
-                Get instant service quotes for roofing, solar, and repairs
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How It Works</Text>
-          <View style={styles.card}>
-            <View style={styles.stepContainer}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>1</Text>
-              </View>
-              <Text style={styles.stepText}>Upload photos of the property</Text>
-            </View>
-            <View style={styles.stepContainer}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>2</Text>
-              </View>
-              <Text style={styles.stepText}>AI analyzes images for damage and compatibility</Text>
-            </View>
-            <View style={styles.stepContainer}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>3</Text>
-              </View>
-              <Text style={styles.stepText}>Review detailed analysis results</Text>
-            </View>
-            <View style={styles.stepContainer}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>4</Text>
-              </View>
-              <Text style={styles.stepText}>Get instant service quotes</Text>
-            </View>
-            <View style={styles.stepContainer}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>5</Text>
-              </View>
-              <Text style={styles.stepText}>Generate and share PDF reports</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Note</Text>
-          <View style={styles.noteCard}>
-            <IconSymbol 
-              ios_icon_name="info.circle.fill" 
-              android_material_icon_name="info" 
-              size={24} 
-              color={colors.accent} 
-            />
-            <Text style={styles.noteText}>
-              This app uses mock AI analysis for demonstration purposes. 
-              In a production environment, it would integrate with real AI services 
-              for accurate property analysis.
+        {/* Settings Sections */}
+        {settingsSections.map((section, sectionIndex) => (
+          <View key={sectionIndex} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+              {section.title}
             </Text>
+            <View style={[styles.sectionCard, { backgroundColor: colors.card }]}>
+              {section.items.map((item, itemIndex) => (
+                <React.Fragment key={item.id}>
+                  <TouchableOpacity
+                    style={styles.settingItem}
+                    onPress={() => {
+                      if (item.id === 'theme') {
+                        handleThemeChange();
+                      } else {
+                        console.log('Navigate to:', item.id);
+                      }
+                    }}
+                  >
+                    <View style={styles.settingLeft}>
+                      <View style={[styles.settingIcon, { backgroundColor: colors.accent + '20' }]}>
+                        <IconSymbol
+                          ios_icon_name={item.icon}
+                          android_material_icon_name={item.iconAndroid}
+                          size={22}
+                          color={colors.accent}
+                        />
+                      </View>
+                      <Text style={[styles.settingLabel, { color: colors.text }]}>
+                        {item.label}
+                      </Text>
+                    </View>
+                    {item.type === 'select' && (
+                      <View style={styles.settingRight}>
+                        <Text style={[styles.settingValue, { color: colors.textSecondary }]}>
+                          {getThemeLabel()}
+                        </Text>
+                        <IconSymbol
+                          ios_icon_name="chevron.right"
+                          android_material_icon_name="chevron_right"
+                          size={20}
+                          color={colors.textSecondary}
+                        />
+                      </View>
+                    )}
+                    {item.type === 'navigation' && (
+                      <IconSymbol
+                        ios_icon_name="chevron.right"
+                        android_material_icon_name="chevron_right"
+                        size={20}
+                        color={colors.textSecondary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {itemIndex < section.items.length - 1 && (
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  )}
+                </React.Fragment>
+              ))}
+            </View>
           </View>
+        ))}
+
+        {/* Sign Out Button */}
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={[styles.signOutButton, { backgroundColor: colors.error }]}
+            onPress={() => Alert.alert('Sign Out', 'Are you sure you want to sign out?')}
+          >
+            <IconSymbol
+              ios_icon_name="arrow.right.square.fill"
+              android_material_icon_name="logout"
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Version Info */}
+        <View style={styles.versionInfo}>
+          <Text style={[styles.versionText, { color: colors.textSecondary }]}>
+            TechOps Pro v1.0.0
+          </Text>
+          <Text style={[styles.versionText, { color: colors.textSecondary }]}>
+            © 2024 All rights reserved
+          </Text>
         </View>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingTop: 48,
-    paddingHorizontal: 16,
     paddingBottom: 120,
   },
   header: {
     alignItems: 'center',
+    paddingHorizontal: 20,
     marginBottom: 32,
   },
-  avatarContainer: {
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   name: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: 4,
   },
   email: {
-    fontSize: 14,
-    color: colors.textSecondary,
+    fontSize: 16,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 32,
+  },
+  statCard: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
+    elevation: 2,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
   },
   section: {
+    paddingHorizontal: 20,
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
-  featureCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  featureContent: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  featureDescription: {
     fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 18,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    marginBottom: 12,
+    letterSpacing: 0.5,
   },
-  stepContainer: {
+  sectionCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
+  },
+  settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
+    justifyContent: 'space-between',
+    padding: 16,
   },
-  stepNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepNumberText: {
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  settingRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  settingValue: {
+    fontSize: 14,
+  },
+  divider: {
+    height: 1,
+    marginLeft: 68,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  signOutText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
-  stepText: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 20,
+  versionInfo: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 16,
   },
-  noteCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
+  versionText: {
+    fontSize: 12,
+    marginBottom: 4,
   },
 });
