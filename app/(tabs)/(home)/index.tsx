@@ -5,14 +5,17 @@ import { colors } from '@/styles/commonStyles';
 import { ImageUploader } from '@/components/ImageUploader';
 import { AnalysisResults } from '@/components/AnalysisResults';
 import { QuoteDisplay } from '@/components/QuoteDisplay';
+import { HistoricalAnalysisDisplay } from '@/components/HistoricalAnalysisDisplay';
 import { InspectionReport } from '@/types/inspection';
 import { analyzeImages } from '@/utils/aiAnalysis';
 import { generateQuote } from '@/utils/quoteGenerator';
 import { generateInspectionPDF } from '@/utils/pdfGenerator';
+import { generateInsuranceVerificationPDF } from '@/utils/insurancePdfGenerator';
+import { fetchHistoricalAnalysis } from '@/utils/historicalDataFetcher';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useInspection } from '@/contexts/InspectionContext';
 
-type Step = 'upload' | 'analyzing' | 'results' | 'quote';
+type Step = 'upload' | 'analyzing' | 'results' | 'quote' | 'historical' | 'fetchingHistorical';
 
 export default function HomeScreen() {
   const {
@@ -25,6 +28,8 @@ export default function HomeScreen() {
     roofDiagram,
     propertyAddress,
     setPropertyAddress,
+    historicalAnalysis,
+    setHistoricalAnalysis,
     resetInspection,
   } = useInspection();
 
@@ -54,6 +59,30 @@ export default function HomeScreen() {
       console.error('Error analyzing images:', error);
       Alert.alert('Analysis Error', 'Failed to analyze images. Please try again.');
       setCurrentStep('upload');
+    }
+  };
+
+  const handleFetchHistoricalData = async () => {
+    if (!propertyAddress.trim()) {
+      setTempAddress('');
+      setShowAddressModal(true);
+      return;
+    }
+
+    await fetchHistoricalData();
+  };
+
+  const fetchHistoricalData = async () => {
+    setCurrentStep('fetchingHistorical');
+
+    try {
+      const historical = await fetchHistoricalAnalysis(propertyAddress);
+      setHistoricalAnalysis(historical);
+      setCurrentStep('historical');
+    } catch (error) {
+      console.error('Error fetching historical data:', error);
+      Alert.alert('Error', 'Failed to fetch historical data. Please check the address and try again.');
+      setCurrentStep(analysis ? 'results' : 'upload');
     }
   };
 
@@ -95,6 +124,32 @@ export default function HomeScreen() {
     }
   };
 
+  const handleGenerateInsurancePDF = async () => {
+    if (!analysis || !quote || !historicalAnalysis) {
+      Alert.alert('Error', 'Complete analysis and historical data are required.');
+      return;
+    }
+
+    try {
+      const report: InspectionReport = {
+        id: `INS-${Date.now()}`,
+        propertyAddress: propertyAddress || 'Property Address Not Provided',
+        inspectionDate: new Date(),
+        images,
+        aiAnalysis: analysis,
+        roofDiagram: roofDiagram || undefined,
+        quote: quote,
+        notes: '',
+      };
+
+      await generateInsuranceVerificationPDF(report, historicalAnalysis);
+      Alert.alert('Success', 'Insurance Verification Report generated and ready to share!');
+    } catch (error) {
+      console.error('Error generating Insurance PDF:', error);
+      Alert.alert('PDF Error', 'Failed to generate Insurance Verification Report. Please try again.');
+    }
+  };
+
   const handleSaveAddress = () => {
     if (!tempAddress.trim()) {
       Alert.alert('Required', 'Please enter a property address.');
@@ -102,7 +157,13 @@ export default function HomeScreen() {
     }
     setPropertyAddress(tempAddress);
     setShowAddressModal(false);
-    generatePDF();
+    
+    // Determine what action to take after saving address
+    if (currentStep === 'fetchingHistorical' || !analysis) {
+      fetchHistoricalData();
+    } else {
+      generatePDF();
+    }
   };
 
   const handleReset = () => {
@@ -192,6 +253,25 @@ export default function HomeScreen() {
               </TouchableOpacity>
             )}
 
+            {/* Historical Analysis Button */}
+            <TouchableOpacity 
+              style={styles.historicalButton} 
+              onPress={handleFetchHistoricalData}
+            >
+              <IconSymbol 
+                ios_icon_name="chart.bar.doc.horizontal.fill" 
+                android_material_icon_name="assessment" 
+                size={24} 
+                color={colors.primary} 
+              />
+              <View style={styles.historicalButtonContent}>
+                <Text style={styles.historicalButtonTitle}>Historical Analysis</Text>
+                <Text style={styles.historicalButtonSubtitle}>
+                  Fetch storm data, risk zones, and insurance claims
+                </Text>
+              </View>
+            </TouchableOpacity>
+
             <View style={styles.infoCard}>
               <IconSymbol 
                 ios_icon_name="info.circle.fill" 
@@ -205,6 +285,8 @@ export default function HomeScreen() {
                 <Text style={styles.infoText}>- Structural issues</Text>
                 <Text style={styles.infoText}>- Solar panel compatibility</Text>
                 <Text style={styles.infoText}>- Inspection concerns</Text>
+                <Text style={styles.infoText}>- Historical storm events</Text>
+                <Text style={styles.infoText}>- Fire and flood risk zones</Text>
               </View>
             </View>
           </View>
@@ -215,6 +297,23 @@ export default function HomeScreen() {
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>Analyzing images with AI...</Text>
             <Text style={styles.loadingSubtext}>This may take a few moments</Text>
+          </View>
+        )}
+
+        {currentStep === 'fetchingHistorical' && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.error} />
+            <Text style={styles.loadingText}>Fetching Historical Data...</Text>
+            <Text style={styles.loadingSubtext}>
+              Analyzing storm events, risk zones, and insurance claims
+            </Text>
+            <View style={styles.loadingSteps}>
+              <Text style={styles.loadingStep}>✓ Geocoding address</Text>
+              <Text style={styles.loadingStep}>✓ Fetching NOAA storm data</Text>
+              <Text style={styles.loadingStep}>✓ Analyzing FEMA flood zones</Text>
+              <Text style={styles.loadingStep}>✓ Checking fire risk zones</Text>
+              <Text style={styles.loadingStep}>✓ Gathering insurance claims</Text>
+            </View>
           </View>
         )}
 
@@ -249,6 +348,37 @@ export default function HomeScreen() {
                 <Text style={styles.buttonText}>Generate PDF</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Historical Analysis Button */}
+            <TouchableOpacity 
+              style={styles.historicalButton} 
+              onPress={handleFetchHistoricalData}
+            >
+              <IconSymbol 
+                ios_icon_name="chart.bar.doc.horizontal.fill" 
+                android_material_icon_name="assessment" 
+                size={24} 
+                color={colors.primary} 
+              />
+              <View style={styles.historicalButtonContent}>
+                <Text style={styles.historicalButtonTitle}>
+                  {historicalAnalysis ? 'View Historical Analysis' : 'Fetch Historical Analysis'}
+                </Text>
+                <Text style={styles.historicalButtonSubtitle}>
+                  {historicalAnalysis 
+                    ? 'Storm data and risk assessment available' 
+                    : 'Get storm data, risk zones, and insurance claims'}
+                </Text>
+              </View>
+              {historicalAnalysis && (
+                <IconSymbol 
+                  ios_icon_name="checkmark.circle.fill" 
+                  android_material_icon_name="check_circle" 
+                  size={24} 
+                  color={colors.secondary} 
+                />
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
               <Text style={styles.resetButtonText}>Start New Inspection</Text>
@@ -288,6 +418,93 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Historical Analysis Button */}
+            <TouchableOpacity 
+              style={styles.historicalButton} 
+              onPress={handleFetchHistoricalData}
+            >
+              <IconSymbol 
+                ios_icon_name="chart.bar.doc.horizontal.fill" 
+                android_material_icon_name="assessment" 
+                size={24} 
+                color={colors.primary} 
+              />
+              <View style={styles.historicalButtonContent}>
+                <Text style={styles.historicalButtonTitle}>
+                  {historicalAnalysis ? 'View Historical Analysis' : 'Fetch Historical Analysis'}
+                </Text>
+                <Text style={styles.historicalButtonSubtitle}>
+                  {historicalAnalysis 
+                    ? 'Storm data and risk assessment available' 
+                    : 'Get storm data, risk zones, and insurance claims'}
+                </Text>
+              </View>
+              {historicalAnalysis && (
+                <IconSymbol 
+                  ios_icon_name="checkmark.circle.fill" 
+                  android_material_icon_name="check_circle" 
+                  size={24} 
+                  color={colors.secondary} 
+                />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+              <Text style={styles.resetButtonText}>Start New Inspection</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {currentStep === 'historical' && historicalAnalysis && (
+          <View style={styles.content}>
+            <HistoricalAnalysisDisplay analysis={historicalAnalysis} />
+
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={[styles.button, styles.primaryButton]} 
+                onPress={() => setCurrentStep(analysis ? 'results' : 'upload')}
+              >
+                <IconSymbol 
+                  ios_icon_name="arrow.left.circle.fill" 
+                  android_material_icon_name="arrow_back" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+                <Text style={styles.buttonText}>Back</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.button, styles.insuranceButton]} 
+                onPress={handleGenerateInsurancePDF}
+                disabled={!analysis || !quote}
+              >
+                <IconSymbol 
+                  ios_icon_name="doc.text.fill" 
+                  android_material_icon_name="description" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+                <Text style={styles.buttonText}>Insurance Report</Text>
+              </TouchableOpacity>
+            </View>
+
+            {analysis && quote && (
+              <View style={styles.infoCard}>
+                <IconSymbol 
+                  ios_icon_name="info.circle.fill" 
+                  android_material_icon_name="info" 
+                  size={24} 
+                  color={colors.error} 
+                />
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoTitle}>Insurance Verification Report</Text>
+                  <Text style={styles.infoText}>
+                    Generate a comprehensive insurance report combining historical data with your inspection results
+                  </Text>
+                </View>
+              </View>
+            )}
+
             <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
               <Text style={styles.resetButtonText}>Start New Inspection</Text>
             </TouchableOpacity>
@@ -306,7 +523,7 @@ export default function HomeScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Property Address</Text>
             <Text style={styles.modalDescription}>
-              Enter the property address to include in the PDF report
+              Enter the property address to fetch historical data and generate reports
             </Text>
             
             <TextInput
@@ -331,7 +548,7 @@ export default function HomeScreen() {
                 style={[styles.modalButton, styles.modalSaveButton]} 
                 onPress={handleSaveAddress}
               >
-                <Text style={styles.modalSaveText}>Generate PDF</Text>
+                <Text style={styles.modalSaveText}>Continue</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -429,13 +646,38 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     padding: 18,
     borderRadius: 12,
-    marginBottom: 24,
+    marginBottom: 16,
     gap: 8,
   },
   analyzeButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
+  },
+  historicalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  historicalButtonContent: {
+    flex: 1,
+  },
+  historicalButtonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  historicalButtonSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
   infoCard: {
     flexDirection: 'row',
@@ -476,6 +718,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingSteps: {
+    marginTop: 30,
+    alignItems: 'flex-start',
+  },
+  loadingStep: {
+    fontSize: 13,
+    color: colors.secondary,
+    marginVertical: 4,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -497,6 +750,9 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: colors.secondary,
+  },
+  insuranceButton: {
+    backgroundColor: colors.error,
   },
   buttonText: {
     color: '#FFFFFF',

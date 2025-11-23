@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { RoofDiagram, AIAnalysisResult, ServiceQuote, UploadedImage } from '@/types/inspection';
+import { HistoricalAnalysis } from '@/types/historicalData';
 
 interface InspectionContextType {
   roofDiagram: RoofDiagram | null;
@@ -13,6 +14,8 @@ interface InspectionContextType {
   setQuote: (quote: ServiceQuote | null) => void;
   propertyAddress: string;
   setPropertyAddress: (address: string) => void;
+  historicalAnalysis: HistoricalAnalysis | null;
+  setHistoricalAnalysis: (analysis: HistoricalAnalysis | null) => void;
   resetInspection: () => void;
 }
 
@@ -24,6 +27,7 @@ export function InspectionProvider({ children }: { children: ReactNode }) {
   const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
   const [quote, setQuote] = useState<ServiceQuote | null>(null);
   const [propertyAddress, setPropertyAddress] = useState('');
+  const [historicalAnalysis, setHistoricalAnalysis] = useState<HistoricalAnalysis | null>(null);
 
   const resetInspection = () => {
     setRoofDiagram(null);
@@ -31,6 +35,7 @@ export function InspectionProvider({ children }: { children: ReactNode }) {
     setAnalysis(null);
     setQuote(null);
     setPropertyAddress('');
+    setHistoricalAnalysis(null);
   };
 
   return (
@@ -46,6 +51,8 @@ export function InspectionProvider({ children }: { children: ReactNode }) {
         setQuote,
         propertyAddress,
         setPropertyAddress,
+        historicalAnalysis,
+        setHistoricalAnalysis,
         resetInspection,
       }}
     >
