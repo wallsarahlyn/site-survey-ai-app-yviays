@@ -296,16 +296,17 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '700',
+    letterSpacing: -0.5,
   },
   addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 4px 12px rgba(0, 217, 255, 0.3)',
+    boxShadow: '0px 4px 16px rgba(6, 182, 212, 0.3)',
     elevation: 4,
   },
   filterContainer: {
@@ -317,9 +318,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   filterButton: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
+    paddingVertical: 12,
+    borderRadius: 14,
+    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
     elevation: 2,
   },
   filterText: {
@@ -330,11 +331,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 20,
   },
   jobCard: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 16,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
+    elevation: 4,
     position: 'relative',
   },
   priorityBar: {
@@ -343,8 +344,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
   },
   jobHeader: {
     flexDirection: 'row',
@@ -365,9 +366,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
   statusText: {
     fontSize: 11,
@@ -387,8 +388,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
   },
   scheduleInfo: {
-    padding: 12,
-    borderRadius: 12,
+    padding: 14,
+    borderRadius: 14,
     gap: 8,
     marginBottom: 12,
   },
@@ -418,13 +419,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: '700',
   },
   progressBar: {
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 4,
   },
   assignedInfo: {
     flexDirection: 'row',
@@ -436,8 +437,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
   },
   notes: {
-    padding: 12,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 12,
   },
   notesText: {
     fontSize: 13,

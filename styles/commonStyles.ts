@@ -5,38 +5,38 @@ import { useColorScheme } from 'react-native';
 // InspectAI Theme System
 export type ThemeMode = 'light' | 'dark' | 'field';
 
-// Light theme with clean, professional colors
+// Enhanced Light theme with modern, professional colors
 const lightTheme = {
-  // Backgrounds
-  background: '#F8F9FA',
+  // Backgrounds - Softer, more modern
+  background: '#F5F7FA',
   backgroundSecondary: '#FFFFFF',
-  backgroundTertiary: '#E8EAED',
+  backgroundTertiary: '#E8ECEF',
   
   // Surfaces
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
   
-  // Text
-  text: '#1A2332',
-  textSecondary: '#5A6C7D',
-  textTertiary: '#8B95A1',
+  // Text - Better contrast
+  text: '#1A1F36',
+  textSecondary: '#697386',
+  textTertiary: '#9AA5B1',
   textInverse: '#FFFFFF',
   
-  // Primary - Professional Blue
-  primary: '#2563EB',
-  primaryLight: '#3B82F6',
-  primaryDark: '#1D4ED8',
+  // Primary - Modern Blue
+  primary: '#3B82F6',
+  primaryLight: '#60A5FA',
+  primaryDark: '#2563EB',
   
-  // Secondary - Success Green
+  // Secondary - Fresh Green
   secondary: '#10B981',
   secondaryLight: '#34D399',
   secondaryDark: '#059669',
   
-  // Accent - Vibrant Orange
-  accent: '#F59E0B',
-  accentLight: '#FBBF24',
-  accentDark: '#D97706',
+  // Accent - Vibrant Teal
+  accent: '#06B6D4',
+  accentLight: '#22D3EE',
+  accentDark: '#0891B2',
   
   // Highlight - Purple
   highlight: '#8B5CF6',
@@ -49,67 +49,67 @@ const lightTheme = {
   error: '#EF4444',
   info: '#3B82F6',
   
-  // Borders & Dividers
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
-  divider: '#E5E7EB',
+  // Borders & Dividers - Subtle
+  border: '#E2E8F0',
+  borderLight: '#F1F5F9',
+  divider: '#E2E8F0',
   
   // Overlays
   overlay: 'rgba(0, 0, 0, 0.5)',
   overlayLight: 'rgba(0, 0, 0, 0.3)',
   
   // Shadows
-  shadow: 'rgba(0, 0, 0, 0.1)',
-  shadowDark: 'rgba(0, 0, 0, 0.2)',
+  shadow: 'rgba(0, 0, 0, 0.08)',
+  shadowDark: 'rgba(0, 0, 0, 0.15)',
 };
 
 const darkTheme = {
-  // Backgrounds
-  background: '#0A0E14',
-  backgroundSecondary: '#131920',
-  backgroundTertiary: '#1A2332',
+  // Backgrounds - Deep, rich dark
+  background: '#0F172A',
+  backgroundSecondary: '#1E293B',
+  backgroundTertiary: '#334155',
   
   // Surfaces
-  surface: '#131920',
-  surfaceElevated: '#1A2332',
-  card: '#1A2332',
+  surface: '#1E293B',
+  surfaceElevated: '#334155',
+  card: '#1E293B',
   
   // Text
-  text: '#E8EAED',
-  textSecondary: '#A0AEC0',
-  textTertiary: '#718096',
-  textInverse: '#0A0E14',
+  text: '#F1F5F9',
+  textSecondary: '#CBD5E1',
+  textTertiary: '#94A3B8',
+  textInverse: '#0F172A',
   
-  // Primary - Professional Blue (lighter for dark mode)
-  primary: '#3B82F6',
-  primaryLight: '#60A5FA',
-  primaryDark: '#2563EB',
+  // Primary - Brighter for dark mode
+  primary: '#60A5FA',
+  primaryLight: '#93C5FD',
+  primaryDark: '#3B82F6',
   
-  // Secondary - Success Green
-  secondary: '#10B981',
-  secondaryLight: '#34D399',
-  secondaryDark: '#059669',
+  // Secondary - Vibrant Green
+  secondary: '#34D399',
+  secondaryLight: '#6EE7B7',
+  secondaryDark: '#10B981',
   
-  // Accent - Vibrant Orange
-  accent: '#F59E0B',
-  accentLight: '#FBBF24',
-  accentDark: '#D97706',
+  // Accent - Bright Teal
+  accent: '#22D3EE',
+  accentLight: '#67E8F9',
+  accentDark: '#06B6D4',
   
   // Highlight - Purple
-  highlight: '#8B5CF6',
-  highlightLight: '#A78BFA',
-  highlightDark: '#7C3AED',
+  highlight: '#A78BFA',
+  highlightLight: '#C4B5FD',
+  highlightDark: '#8B5CF6',
   
   // Status Colors
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
+  success: '#34D399',
+  warning: '#FBBF24',
+  error: '#F87171',
+  info: '#60A5FA',
   
   // Borders & Dividers
-  border: '#2D3748',
-  borderLight: '#1A2332',
-  divider: '#2D3748',
+  border: '#334155',
+  borderLight: '#1E293B',
+  divider: '#334155',
   
   // Overlays
   overlay: 'rgba(0, 0, 0, 0.7)',
@@ -123,8 +123,8 @@ const darkTheme = {
 const fieldTheme = {
   // High-visibility backgrounds
   background: '#FFFFFF',
-  backgroundSecondary: '#F8F9FA',
-  backgroundTertiary: '#E8EAED',
+  backgroundSecondary: '#F5F7FA',
+  backgroundTertiary: '#E8ECEF',
   
   // High contrast surfaces
   surface: '#FFFFFF',
@@ -133,24 +133,24 @@ const fieldTheme = {
   
   // High contrast text
   text: '#000000',
-  textSecondary: '#1A2332',
-  textTertiary: '#2C3E50',
+  textSecondary: '#1A1F36',
+  textTertiary: '#334155',
   textInverse: '#FFFFFF',
   
   // Primary - High contrast blue
-  primary: '#1D4ED8',
+  primary: '#1E40AF',
   primaryLight: '#2563EB',
-  primaryDark: '#1E40AF',
+  primaryDark: '#1E3A8A',
   
   // Secondary - High contrast green
-  secondary: '#059669',
-  secondaryLight: '#10B981',
-  secondaryDark: '#047857',
+  secondary: '#047857',
+  secondaryLight: '#059669',
+  secondaryDark: '#065F46',
   
-  // Accent - Bright orange for visibility
-  accent: '#EA580C',
-  accentLight: '#F59E0B',
-  accentDark: '#C2410C',
+  // Accent - Bright teal for visibility
+  accent: '#0891B2',
+  accentLight: '#06B6D4',
+  accentDark: '#0E7490',
   
   // Highlight - Purple
   highlight: '#7C3AED',
@@ -158,15 +158,15 @@ const fieldTheme = {
   highlightDark: '#6D28D9',
   
   // Status Colors - High visibility
-  success: '#059669',
+  success: '#047857',
   warning: '#D97706',
   error: '#DC2626',
   info: '#2563EB',
   
   // Borders - High contrast
-  border: '#000000',
-  borderLight: '#2C3E50',
-  divider: '#000000',
+  border: '#1A1F36',
+  borderLight: '#334155',
+  divider: '#1A1F36',
   
   // Overlays
   overlay: 'rgba(0, 0, 0, 0.8)',
@@ -204,31 +204,37 @@ export const buttonStyles = StyleSheet.create({
     backgroundColor: lightTheme.primary,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0px 4px 12px rgba(59, 130, 246, 0.3)',
+    elevation: 4,
   },
   secondary: {
     backgroundColor: lightTheme.secondary,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0px 4px 12px rgba(16, 185, 129, 0.3)',
+    elevation: 4,
   },
   accent: {
     backgroundColor: lightTheme.accent,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0px 4px 12px rgba(6, 182, 212, 0.3)',
+    elevation: 4,
   },
   outline: {
     backgroundColor: 'transparent',
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: lightTheme.border,
     alignItems: 'center',
@@ -256,10 +262,11 @@ export const commonStyles = StyleSheet.create({
     width: '100%',
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     color: lightTheme.text,
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 18,
@@ -286,18 +293,18 @@ export const commonStyles = StyleSheet.create({
   },
   card: {
     backgroundColor: lightTheme.card,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
     elevation: 4,
   },
   cardCompact: {
     backgroundColor: lightTheme.card,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
+    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
     elevation: 2,
   },
   row: {

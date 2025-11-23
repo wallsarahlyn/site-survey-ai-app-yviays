@@ -125,7 +125,7 @@ export default function ProfileScreen() {
         },
         {
           id: 'about',
-          label: 'About TechOps Pro',
+          label: 'About InspectAI',
           icon: 'info.circle.fill',
           iconAndroid: 'info',
           type: 'navigation' as const,
@@ -180,11 +180,11 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
-            <Text style={styles.avatarText}>TP</Text>
+            <Text style={styles.avatarText}>IA</Text>
           </View>
-          <Text style={[styles.name, { color: colors.text }]}>TechOps Pro</Text>
+          <Text style={[styles.name, { color: colors.text }]}>InspectAI</Text>
           <Text style={[styles.email, { color: colors.textSecondary }]}>
-            admin@techopspro.com
+            admin@inspectai.com
           </Text>
         </View>
 
@@ -292,7 +292,7 @@ export default function ProfileScreen() {
         {/* Version Info */}
         <View style={styles.versionInfo}>
           <Text style={[styles.versionText, { color: colors.textSecondary }]}>
-            TechOps Pro v1.0.0
+            InspectAI v1.0.0
           </Text>
           <Text style={[styles.versionText, { color: colors.textSecondary }]}>
             © 2024 All rights reserved
@@ -320,22 +320,25 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: 32,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    boxShadow: '0px 4px 16px rgba(6, 182, 212, 0.3)',
+    elevation: 4,
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   name: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   email: {
     fontSize: 16,
@@ -348,19 +351,20 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
     alignItems: 'center',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
-    elevation: 2,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.06)',
+    elevation: 3,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
+    fontWeight: '500',
   },
   section: {
     paddingHorizontal: 20,
@@ -374,10 +378,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     letterSpacing: 0.5,
   },
   sectionCard: {
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
+    elevation: 4,
   },
   settingItem: {
     flexDirection: 'row',
@@ -392,9 +396,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     flex: 1,
   },
   settingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -412,15 +416,17 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   divider: {
     height: 1,
-    marginLeft: 68,
+    marginLeft: 72,
   },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     gap: 8,
+    boxShadow: '0px 4px 12px rgba(239, 68, 68, 0.3)',
+    elevation: 4,
   },
   signOutText: {
     color: '#FFFFFF',

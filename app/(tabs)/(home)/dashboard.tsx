@@ -174,7 +174,7 @@ export default function DashboardScreen() {
               ios_icon_name="person.circle.fill"
               android_material_icon_name="account_circle"
               size={32}
-              color={colors.primary}
+              color={colors.accent}
             />
           </TouchableOpacity>
         </View>
@@ -213,7 +213,7 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Inspections</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/(home)/inspection')}>
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
+              <Text style={[styles.seeAllText, { color: colors.accent }]}>See all</Text>
             </TouchableOpacity>
           </View>
           {recentInspections.map((inspection) => (
@@ -263,7 +263,7 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Job Queue</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/operations')}>
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
+              <Text style={[styles.seeAllText, { color: colors.accent }]}>See all</Text>
             </TouchableOpacity>
           </View>
           {jobQueue.map((job) => (
@@ -338,17 +338,18 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '700',
+    letterSpacing: -0.5,
   },
   profileButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
   },
   section: {
     paddingHorizontal: 20,
@@ -361,11 +362,12 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
+    letterSpacing: -0.3,
   },
   seeAllText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   quickActionsGrid: {
@@ -376,15 +378,15 @@ const createStyles = (colors: any) => StyleSheet.create({
   quickActionCard: {
     width: isTablet ? '23%' : '48%',
     padding: 20,
-    borderRadius: 16,
+    borderRadius: 20,
     alignItems: 'center',
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
+    elevation: 4,
   },
   quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -400,11 +402,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center',
   },
   inspectionCard: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 12,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
+    elevation: 4,
   },
   inspectionHeader: {
     flexDirection: 'row',
@@ -424,9 +426,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 13,
   },
   severityBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
   severityText: {
     fontSize: 11,
@@ -446,20 +448,20 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 13,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
   },
   jobCard: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 12,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
+    elevation: 4,
   },
   jobHeader: {
     flexDirection: 'row',
