@@ -8,11 +8,16 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getTheme, spacing, borderRadius, typography } from '@/styles/commonStyles';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
+import { supabase } from '@/app/integrations/supabase/client';
 
 const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -55,10 +60,20 @@ interface FAQItemProps {
   answer: string;
 }
 
+interface SampleReportCardProps {
+  title: string;
+  description: string;
+  reportType: 'basic' | 'pro' | 'premium';
+  icon: string;
+  onPress: () => void;
+}
+
 export default function LandingPage() {
   const { mode } = useTheme();
   const colors = getTheme(mode);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [isGeneratingSample, setIsGeneratingSample] = useState(false);
+  const [sampleModalVisible, setSampleModalVisible] = useState(false);
 
   const handleBuyReport = (reportType: string) => {
     console.log(`Buy ${reportType} report clicked`);
@@ -71,8 +86,87 @@ export default function LandingPage() {
   };
 
   const handleSeeSample = () => {
-    console.log('See sample report clicked');
-    // TODO: Implement sample report view
+    setSampleModalVisible(true);
+  };
+
+  const handleGenerateSampleReport = async (reportType: 'basic' | 'pro' | 'premium') => {
+    setIsGeneratingSample(true);
+    setSampleModalVisible(false);
+
+    try {
+      console.log(`Generating sample ${reportType} report...`);
+
+      // Check authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Please sign in to view sample reports');
+        setIsGeneratingSample(false);
+        return;
+      }
+
+      // Call the Edge Function to generate sample PDF
+      const { data, error } = await supabase.functions.invoke('generate-sample-report', {
+        body: { reportType },
+      });
+
+      if (error) {
+        console.error('Error generating sample report:', error);
+        alert('Failed to generate sample report. Please try again.');
+        setIsGeneratingSample(false);
+        return;
+      }
+
+      if (!data) {
+        throw new Error('No PDF data returned from server');
+      }
+
+      console.log('Sample report generated successfully');
+
+      // Convert the response to a blob and save it
+      const blob = data instanceof Blob ? data : new Blob([data], { type: 'application/pdf' });
+      
+      // Create a file URI
+      const fileName = `sample-${reportType}-report.pdf`;
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          const base64 = base64data.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      const base64 = await base64Promise;
+
+      // Write the file
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      console.log('Sample PDF saved to:', fileUri);
+
+      // Share the PDF
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/pdf',
+          dialogTitle: `Sample ${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
+          UTI: 'com.adobe.pdf',
+        });
+      } else {
+        alert('PDF saved successfully!');
+      }
+
+    } catch (error) {
+      console.error('Error generating sample report:', error);
+      alert('Failed to generate sample report. Please try again.');
+    } finally {
+      setIsGeneratingSample(false);
+    }
   };
 
   const toggleFAQ = (index: number) => {
@@ -135,6 +229,42 @@ export default function LandingPage() {
           </View>
         </View>
       </LinearGradient>
+
+      {/* Sample Reports Section */}
+      <View style={[styles.section, { backgroundColor: colors.background }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          View Sample Reports
+        </Text>
+        <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+          See exactly what you&apos;ll get before you buy
+        </Text>
+        
+        <View style={styles.sampleReportsContainer}>
+          <SampleReportCard
+            title="Basic Inspection"
+            description="Quick roof assessment with AI damage detection and repair recommendations"
+            reportType="basic"
+            icon="document"
+            onPress={() => handleGenerateSampleReport('basic')}
+          />
+          
+          <SampleReportCard
+            title="Pro Measurement"
+            description="Complete inspection with roof measurements, facet breakdown, and detailed quotes"
+            reportType="pro"
+            icon="ruler"
+            onPress={() => handleGenerateSampleReport('pro')}
+          />
+          
+          <SampleReportCard
+            title="Premium Insurance"
+            description="Full report with historical storm data, risk analysis, and insurance documentation"
+            reportType="premium"
+            icon="shield"
+            onPress={() => handleGenerateSampleReport('premium')}
+          />
+        </View>
+      </View>
 
       {/* How It Works Section */}
       <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
@@ -349,9 +479,106 @@ export default function LandingPage() {
         </TouchableOpacity>
       </LinearGradient>
 
+      {/* Sample Report Modal */}
+      <Modal
+        visible={sampleModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSampleModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Choose a Sample Report
+            </Text>
+            <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
+              Select which type of report you&apos;d like to preview
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: colors.primary }]}
+              onPress={() => handleGenerateSampleReport('basic')}
+            >
+              <Text style={styles.modalButtonText}>Basic Inspection Report</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: colors.primary }]}
+              onPress={() => handleGenerateSampleReport('pro')}
+            >
+              <Text style={styles.modalButtonText}>Pro Measurement Report</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: colors.primary }]}
+              onPress={() => handleGenerateSampleReport('premium')}
+            >
+              <Text style={styles.modalButtonText}>Premium Insurance Report</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalCancelButton, { borderColor: colors.border }]}
+              onPress={() => setSampleModalVisible(false)}
+            >
+              <Text style={[styles.modalCancelButtonText, { color: colors.text }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Loading Overlay */}
+      {isGeneratingSample && (
+        <View style={styles.loadingOverlay}>
+          <View style={[styles.loadingContent, { backgroundColor: colors.cardBackground }]}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.text }]}>
+              Generating sample report...
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Bottom padding to avoid tab bar overlap */}
       <View style={{ height: 100 }} />
     </ScrollView>
+  );
+}
+
+// Sample Report Card Component
+function SampleReportCard({ title, description, reportType, icon, onPress }: SampleReportCardProps) {
+  const { mode } = useTheme();
+  const colors = getTheme(mode);
+
+  return (
+    <TouchableOpacity
+      style={[styles.sampleReportCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.sampleReportIconContainer, { backgroundColor: `${colors.primary}15` }]}>
+        <IconSymbol
+          ios_icon_name={icon}
+          android_material_icon_name={icon}
+          size={40}
+          color={colors.primary}
+        />
+      </View>
+      <Text style={[styles.sampleReportTitle, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.sampleReportDescription, { color: colors.textSecondary }]}>
+        {description}
+      </Text>
+      <View style={[styles.sampleReportButton, { backgroundColor: colors.primary }]}>
+        <Text style={styles.sampleReportButtonText}>View Sample</Text>
+        <IconSymbol
+          ios_icon_name="arrow.right"
+          android_material_icon_name="arrow_forward"
+          size={16}
+          color="#FFFFFF"
+        />
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -628,6 +855,52 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   
+  // Sample Reports
+  sampleReportsContainer: {
+    flexDirection: isMobile ? 'column' : 'row',
+    gap: spacing.lg,
+    maxWidth: 1200,
+    width: '100%',
+  },
+  sampleReportCard: {
+    flex: 1,
+    padding: spacing.xl,
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    minHeight: 280,
+  },
+  sampleReportIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  sampleReportTitle: {
+    ...typography.h3,
+    marginBottom: spacing.sm,
+  },
+  sampleReportDescription: {
+    ...typography.body,
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+    flex: 1,
+  },
+  sampleReportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+  },
+  sampleReportButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
   // How It Works
   stepsContainer: {
     flexDirection: isMobile ? 'column' : 'row',
@@ -888,5 +1161,73 @@ const styles = StyleSheet.create({
   ctaButtonText: {
     fontSize: 18,
     fontWeight: '600',
+  },
+  
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+  },
+  modalTitle: {
+    ...typography.h2,
+    fontSize: 24,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  modalSubtitle: {
+    ...typography.body,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  modalButton: {
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalCancelButton: {
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    borderWidth: 2,
+    marginTop: spacing.sm,
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  // Loading Overlay
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContent: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl * 2,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  loadingText: {
+    ...typography.body,
+    marginTop: spacing.lg,
+    textAlign: 'center',
   },
 });

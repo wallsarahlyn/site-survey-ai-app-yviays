@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   TextInput,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useInspection } from '@/contexts/InspectionContext';
@@ -18,6 +19,7 @@ import { saveHistoricalAnalysis } from '@/utils/supabaseHelpers';
 import HistoricalAnalysisDisplay from '@/components/HistoricalAnalysisDisplay';
 import { InspectionReport } from '@/types/inspection';
 import { supabase } from '@/app/integrations/supabase/client';
+import { IconSymbol } from '@/components/IconSymbol';
 
 export default function InsuranceScreen() {
   const { colors } = useTheme();
@@ -170,60 +172,116 @@ export default function InsuranceScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.content}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Insurance Verification</Text>
+          <View style={[styles.headerIcon, { backgroundColor: `${colors.primary}15` }]}>
+            <IconSymbol
+              ios_icon_name="shield.fill"
+              android_material_icon_name="shield"
+              size={32}
+              color={colors.primary}
+            />
+          </View>
+          <Text style={[styles.title, { color: colors.text }]}>Insurance Report</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Historical data analysis for underwriting
+            Generate comprehensive insurance verification reports with historical weather and risk data
           </Text>
         </View>
 
         {!isAuthenticated && (
           <View style={[styles.warningCard, { backgroundColor: colors.cardBackground, borderColor: '#F59E0B' }]}>
-            <Text style={[styles.warningTitle, { color: '#F59E0B' }]}>⚠️ Sign In Required</Text>
+            <View style={styles.warningHeader}>
+              <IconSymbol
+                ios_icon_name="exclamationmark.triangle.fill"
+                android_material_icon_name="warning"
+                size={24}
+                color="#F59E0B"
+              />
+              <Text style={[styles.warningTitle, { color: '#F59E0B' }]}>Sign In Required</Text>
+            </View>
             <Text style={[styles.warningText, { color: colors.textSecondary }]}>
               Historical data analysis requires authentication. Please sign in from the Profile tab to use this feature.
             </Text>
           </View>
         )}
 
+        {/* Address Input Section */}
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
+          <View style={styles.sectionHeader}>
+            <IconSymbol
+              ios_icon_name="location.fill"
+              android_material_icon_name="location_on"
+              size={20}
+              color={colors.primary}
+            />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
+          </View>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+            Enter the property address to fetch historical weather data, storm events, and risk assessments
+          </Text>
+          
           <TextInput
             style={[styles.input, { 
               backgroundColor: colors.background, 
               color: colors.text,
               borderColor: colors.border 
             }]}
-            placeholder="Enter property address"
+            placeholder="Enter property address (e.g., 123 Main St, Austin, TX 78701)"
             placeholderTextColor={colors.textSecondary}
             value={localAddress}
             onChangeText={setLocalAddress}
+            editable={isAuthenticated}
           />
           
           <TouchableOpacity
-            style={[styles.fetchButton, { backgroundColor: colors.primary }]}
+            style={[
+              styles.fetchButton, 
+              { backgroundColor: isAuthenticated ? colors.primary : colors.border }
+            ]}
             onPress={handleFetchData}
             disabled={isFetching || !isAuthenticated}
           >
             {isFetching ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.fetchButtonText}>
-                {isAuthenticated ? 'Fetch Historical Data' : 'Sign In to Fetch Data'}
-              </Text>
+              <>
+                <IconSymbol
+                  ios_icon_name="cloud.fill"
+                  android_material_icon_name="cloud_download"
+                  size={20}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.fetchButtonText}>
+                  {isAuthenticated ? 'Fetch Historical Data' : 'Sign In to Fetch Data'}
+                </Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
 
+        {/* Historical Analysis Display */}
         {historicalAnalysis && (
           <>
             <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Historical Analysis</Text>
+              <View style={styles.sectionHeader}>
+                <IconSymbol
+                  ios_icon_name="chart.bar.fill"
+                  android_material_icon_name="bar_chart"
+                  size={20}
+                  color={colors.primary}
+                />
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Historical Analysis</Text>
+              </View>
               <HistoricalAnalysisDisplay analysis={historicalAnalysis} />
             </View>
 
+            {/* Action Buttons */}
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: colors.success }]}
@@ -233,61 +291,113 @@ export default function InsuranceScreen() {
                 {isSaving ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.actionButtonText}>Save Analysis</Text>
+                  <>
+                    <IconSymbol
+                      ios_icon_name="square.and.arrow.down.fill"
+                      android_material_icon_name="save"
+                      size={20}
+                      color="#FFFFFF"
+                    />
+                    <Text style={styles.actionButtonText}>Save Analysis</Text>
+                  </>
                 )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.actionButton, 
+                  { backgroundColor: (!analysis || !quote) ? colors.border : colors.primary }
+                ]}
                 onPress={handleGeneratePDF}
                 disabled={isGeneratingPDF || !analysis || !quote}
               >
                 {isGeneratingPDF ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.actionButtonText}>
-                    Generate Insurance Report
-                  </Text>
+                  <>
+                    <IconSymbol
+                      ios_icon_name="doc.text.fill"
+                      android_material_icon_name="description"
+                      size={20}
+                      color="#FFFFFF"
+                    />
+                    <Text style={styles.actionButtonText}>
+                      Generate Insurance Report
+                    </Text>
+                  </>
                 )}
               </TouchableOpacity>
             </View>
 
             {(!analysis || !quote) && (
-              <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
-                <Text style={[styles.infoTitle, { color: colors.text }]}>📋 Complete Inspection Required</Text>
+              <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.info }]}>
+                <View style={styles.infoHeader}>
+                  <IconSymbol
+                    ios_icon_name="info.circle.fill"
+                    android_material_icon_name="info"
+                    size={24}
+                    color={colors.info}
+                  />
+                  <Text style={[styles.infoTitle, { color: colors.text }]}>Complete Inspection Required</Text>
+                </View>
                 <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                  To generate a complete insurance verification report, please complete a property inspection from the Inspection tab first.
+                  To generate a complete insurance verification report, please complete a property inspection from the Inspection tab first. The insurance report combines:
                 </Text>
+                <View style={styles.bulletList}>
+                  <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+                    • AI-powered roof and structural analysis
+                  </Text>
+                  <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+                    • Historical weather and storm data
+                  </Text>
+                  <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+                    • Risk assessments and insurance claims data
+                  </Text>
+                  <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+                    • Comprehensive cost estimates
+                  </Text>
+                </View>
               </View>
             )}
           </>
         )}
 
-        <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.infoTitle, { color: colors.text }]}>ℹ️ About Insurance Verification</Text>
+        {/* Info Card */}
+        <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+          <View style={styles.infoHeader}>
+            <IconSymbol
+              ios_icon_name="lightbulb.fill"
+              android_material_icon_name="lightbulb"
+              size={24}
+              color={colors.primary}
+            />
+            <Text style={[styles.infoTitle, { color: colors.text }]}>About Insurance Verification</Text>
+          </View>
           <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            This tool fetches comprehensive historical data including:
+            This tool fetches comprehensive historical data to support insurance claims and underwriting:
           </Text>
-          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-            • Storm events and weather patterns (5 years)
-          </Text>
-          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-            • Fire and flood risk assessments
-          </Text>
-          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-            • Insurance claim statistics for the area
-          </Text>
-          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-            • Regional roof age and replacement patterns
-          </Text>
-          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
-            • Multi-factor risk scoring
-          </Text>
+          <View style={styles.bulletList}>
+            <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+              • Storm events and weather patterns (5 years)
+            </Text>
+            <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+              • Fire and flood risk assessments
+            </Text>
+            <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+              • Insurance claim statistics for the area
+            </Text>
+            <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+              • Regional roof age and replacement patterns
+            </Text>
+            <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+              • Multi-factor risk scoring
+            </Text>
+          </View>
         </View>
 
         <View style={styles.bottomSpacer} />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -295,49 +405,81 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    padding: 20,
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: Platform.OS === 'android' ? 48 : 20,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
   header: {
+    alignItems: 'center',
     marginBottom: 24,
   },
+  headerIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   warningCard: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
     borderWidth: 2,
     marginBottom: 20,
   },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
   warningTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
-    marginBottom: 8,
   },
   warningText: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   section: {
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 20,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  sectionDescription: {
+    fontSize: 14,
+    lineHeight: 20,
     marginBottom: 16,
   },
   input: {
-    height: 50,
+    height: 56,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
     marginBottom: 16,
@@ -345,8 +487,10 @@ const styles = StyleSheet.create({
   fetchButton: {
     height: 56,
     borderRadius: 12,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 12,
   },
   fetchButtonText: {
     color: '#FFFFFF',
@@ -360,8 +504,10 @@ const styles = StyleSheet.create({
   actionButton: {
     height: 56,
     borderRadius: 12,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 12,
   },
   actionButtonText: {
     color: '#FFFFFF',
@@ -370,25 +516,33 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 20,
+    borderWidth: 1,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
   },
   infoTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontWeight: '700',
   },
   infoText: {
     fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  bulletList: {
+    gap: 8,
   },
   bulletPoint: {
     fontSize: 14,
-    lineHeight: 24,
-    marginLeft: 8,
+    lineHeight: 22,
   },
   bottomSpacer: {
-    height: 100,
+    height: 20,
   },
 });
