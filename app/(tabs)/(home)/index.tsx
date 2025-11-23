@@ -5,21 +5,30 @@ import { colors } from '@/styles/commonStyles';
 import { ImageUploader } from '@/components/ImageUploader';
 import { AnalysisResults } from '@/components/AnalysisResults';
 import { QuoteDisplay } from '@/components/QuoteDisplay';
-import { UploadedImage, AIAnalysisResult, ServiceQuote, InspectionReport, RoofDiagram } from '@/types/inspection';
+import { InspectionReport } from '@/types/inspection';
 import { analyzeImages } from '@/utils/aiAnalysis';
 import { generateQuote } from '@/utils/quoteGenerator';
 import { generateInspectionPDF } from '@/utils/pdfGenerator';
 import { IconSymbol } from '@/components/IconSymbol';
+import { useInspection } from '@/contexts/InspectionContext';
 
 type Step = 'upload' | 'analyzing' | 'results' | 'quote';
 
 export default function HomeScreen() {
+  const {
+    images,
+    setImages,
+    analysis,
+    setAnalysis,
+    quote,
+    setQuote,
+    roofDiagram,
+    propertyAddress,
+    setPropertyAddress,
+    resetInspection,
+  } = useInspection();
+
   const [currentStep, setCurrentStep] = useState<Step>('upload');
-  const [images, setImages] = useState<UploadedImage[]>([]);
-  const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
-  const [quote, setQuote] = useState<ServiceQuote | null>(null);
-  const [roofDiagram, setRoofDiagram] = useState<RoofDiagram | null>(null);
-  const [propertyAddress, setPropertyAddress] = useState('');
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [tempAddress, setTempAddress] = useState('');
 
@@ -65,6 +74,8 @@ export default function HomeScreen() {
 
   const generatePDF = async () => {
     try {
+      console.log('Generating PDF with roof diagram:', roofDiagram);
+      
       const report: InspectionReport = {
         id: `INS-${Date.now()}`,
         propertyAddress: propertyAddress || 'Property Address Not Provided',
@@ -105,11 +116,7 @@ export default function HomeScreen() {
           style: 'destructive',
           onPress: () => {
             setCurrentStep('upload');
-            setImages([]);
-            setAnalysis(null);
-            setQuote(null);
-            setRoofDiagram(null);
-            setPropertyAddress('');
+            resetInspection();
           },
         },
       ]
@@ -155,6 +162,23 @@ export default function HomeScreen() {
               </Text>
               <ImageUploader images={images} onImagesChange={setImages} maxImages={10} />
             </View>
+
+            {roofDiagram && (
+              <View style={styles.diagramInfo}>
+                <IconSymbol 
+                  ios_icon_name="checkmark.circle.fill" 
+                  android_material_icon_name="check_circle" 
+                  size={24} 
+                  color={colors.secondary} 
+                />
+                <View style={styles.diagramInfoContent}>
+                  <Text style={styles.diagramInfoTitle}>Roof Diagram Available</Text>
+                  <Text style={styles.diagramInfoText}>
+                    {roofDiagram.facets.length} facets • {roofDiagram.totalArea.toFixed(0)} sq ft
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {images.length > 0 && (
               <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalyze}>
@@ -373,6 +397,30 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     minHeight: 60,
     textAlignVertical: 'top',
+  },
+  diagramInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+    borderWidth: 2,
+    borderColor: colors.secondary,
+  },
+  diagramInfoContent: {
+    flex: 1,
+  },
+  diagramInfoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  diagramInfoText: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   analyzeButton: {
     flexDirection: 'row',

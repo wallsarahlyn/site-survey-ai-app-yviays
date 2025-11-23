@@ -4,23 +4,18 @@ import { View, Text, StyleSheet, Alert } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { RoofDrawingTool } from '@/components/RoofDrawingTool';
 import { RoofDiagram } from '@/types/inspection';
+import { useInspection } from '@/contexts/InspectionContext';
 
 export default function DrawingScreen() {
-  const [savedDiagram, setSavedDiagram] = useState<RoofDiagram | null>(null);
+  const { roofDiagram, setRoofDiagram } = useInspection();
 
   const handleDiagramComplete = (diagram: RoofDiagram) => {
-    setSavedDiagram(diagram);
+    console.log('Roof diagram saved:', diagram);
+    setRoofDiagram(diagram);
     Alert.alert(
       'Diagram Saved',
-      `Roof diagram saved successfully!\n\nTotal Area: ${diagram.totalArea.toFixed(2)} sq ft\nFacets: ${diagram.facets.length}`,
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            console.log('Roof diagram saved:', diagram);
-          },
-        },
-      ]
+      `Roof diagram with ${diagram.facets.length} facets and ${diagram.totalArea.toFixed(0)} sq ft has been saved. It will be included in your PDF report.`,
+      [{ text: 'OK' }]
     );
   };
 
@@ -29,7 +24,7 @@ export default function DrawingScreen() {
       <View style={styles.content}>
         <RoofDrawingTool 
           onDiagramComplete={handleDiagramComplete}
-          initialDiagram={savedDiagram || undefined}
+          initialDiagram={roofDiagram || undefined}
         />
       </View>
     </View>
