@@ -14,7 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/app/integrations/supabase/client';
 
 export default function ProfileScreen() {
-  const { colors, theme, setTheme } = useTheme();
+  const { colors, mode, setMode } = useTheme();
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -226,15 +226,15 @@ export default function ProfileScreen() {
               style={[
                 styles.themeButton,
                 { 
-                  backgroundColor: theme === 'light' ? colors.primary : colors.background,
+                  backgroundColor: mode === 'light' ? colors.primary : colors.background,
                   borderColor: colors.border,
                 }
               ]}
-              onPress={() => setTheme('light')}
+              onPress={() => setMode('light')}
             >
               <Text style={[
                 styles.themeButtonText,
-                { color: theme === 'light' ? '#FFFFFF' : colors.text }
+                { color: mode === 'light' ? '#FFFFFF' : colors.text }
               ]}>
                 ☀️ Light
               </Text>
@@ -244,15 +244,15 @@ export default function ProfileScreen() {
               style={[
                 styles.themeButton,
                 { 
-                  backgroundColor: theme === 'dark' ? colors.primary : colors.background,
+                  backgroundColor: mode === 'dark' ? colors.primary : colors.background,
                   borderColor: colors.border,
                 }
               ]}
-              onPress={() => setTheme('dark')}
+              onPress={() => setMode('dark')}
             >
               <Text style={[
                 styles.themeButtonText,
-                { color: theme === 'dark' ? '#FFFFFF' : colors.text }
+                { color: mode === 'dark' ? '#FFFFFF' : colors.text }
               ]}>
                 🌙 Dark
               </Text>
@@ -262,15 +262,15 @@ export default function ProfileScreen() {
               style={[
                 styles.themeButton,
                 { 
-                  backgroundColor: theme === 'field' ? colors.primary : colors.background,
+                  backgroundColor: mode === 'field' ? colors.primary : colors.background,
                   borderColor: colors.border,
                 }
               ]}
-              onPress={() => setTheme('field')}
+              onPress={() => setMode('field')}
             >
               <Text style={[
                 styles.themeButtonText,
-                { color: theme === 'field' ? '#FFFFFF' : colors.text }
+                { color: mode === 'field' ? '#FFFFFF' : colors.text }
               ]}>
                 🏗️ Field
               </Text>
