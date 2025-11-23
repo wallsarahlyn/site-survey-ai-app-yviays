@@ -1,85 +1,102 @@
 
 export type ThemeMode = 'light' | 'dark' | 'field';
 
-// Yellow/Solar/Roofing Contractor Theme
+// Advanced Color Theme Palette
+// Primary CTA Buttons: Deep Orange
+// Top Navigation / Footer: Charcoal (#0F0F10)
+// Background: Gunmetal Gray or Soft Black
+// Cards: Dark Gray (#2B2D31) with white text
+// Highlight Elements (AI badges, icons): Teal or Yellow
+// Warnings: Safety Yellow
+// Success: Mint/Teal Green
+
 export const colors = {
-  // Primary colors - Warm yellows and golds for solar/roofing
-  primary: '#FDB913', // Bright solar yellow
-  secondary: '#FF8C00', // Dark orange (roofing accent)
-  accent: '#D4A72C', // Gold accent
-  highlight: '#FFD700', // Bright gold highlight
-  success: '#10B981',
-  error: '#EF4444',
-  warning: '#F59E0B',
-  info: '#3B82F6',
+  // Primary colors - Deep Orange for CTAs
+  primary: '#FF5722', // Deep Orange
+  secondary: '#FF7043', // Lighter Deep Orange
+  accent: '#00BCD4', // Teal for highlights
+  highlight: '#FFD600', // Yellow for highlights
+  success: '#00E5A0', // Mint/Teal Green
+  error: '#FF3B30',
+  warning: '#FFD600', // Safety Yellow
+  info: '#00BCD4',
   
-  // Background colors - Light, warm tones
-  background: '#FFFBF0', // Warm off-white
-  cardBackground: '#FFF9E6', // Light cream
+  // Background colors - Gunmetal Gray / Soft Black
+  background: '#1A1A1D', // Soft Black
+  cardBackground: '#2B2D31', // Dark Gray for cards
   
   // Text colors
-  text: '#2C2416', // Dark brown for contrast
-  textSecondary: '#6B5D47', // Medium brown
+  text: '#FFFFFF', // White text for cards
+  textSecondary: '#B0B3B8', // Light gray for secondary text
   
   // Border colors
-  border: '#E8D9B8', // Light tan border
+  border: '#3A3B3F', // Slightly lighter than card background
+  
+  // Navigation colors
+  navigationBackground: '#0F0F10', // Charcoal for top nav/footer
   
   // Additional colors
-  card: '#FFFFFF',
-  notification: '#EF4444',
+  card: '#2B2D31',
+  notification: '#FF3B30',
 };
 
 export const darkColors = {
-  // Primary colors - Adjusted for dark mode
-  primary: '#FDB913', // Keep bright yellow for visibility
-  secondary: '#FF8C00', // Dark orange
-  accent: '#D4A72C', // Gold accent
-  highlight: '#FFD700', // Bright gold
-  success: '#10B981',
-  error: '#EF4444',
-  warning: '#F59E0B',
-  info: '#60A5FA',
+  // Primary colors - Deep Orange for CTAs
+  primary: '#FF5722', // Deep Orange
+  secondary: '#FF7043', // Lighter Deep Orange
+  accent: '#00BCD4', // Teal for highlights
+  highlight: '#FFD600', // Yellow for highlights
+  success: '#00E5A0', // Mint/Teal Green
+  error: '#FF3B30',
+  warning: '#FFD600', // Safety Yellow
+  info: '#00BCD4',
   
-  // Background colors - Dark with warm undertones
-  background: '#1A1612', // Very dark brown
-  cardBackground: '#2C2416', // Dark brown
+  // Background colors - Gunmetal Gray / Soft Black
+  background: '#1A1A1D', // Soft Black
+  cardBackground: '#2B2D31', // Dark Gray for cards
   
   // Text colors
-  text: '#FFF9E6', // Light cream text
-  textSecondary: '#B8A888', // Tan text
+  text: '#FFFFFF', // White text for cards
+  textSecondary: '#B0B3B8', // Light gray for secondary text
   
   // Border colors
-  border: '#3D3426', // Dark tan border
+  border: '#3A3B3F', // Slightly lighter than card background
+  
+  // Navigation colors
+  navigationBackground: '#0F0F10', // Charcoal for top nav/footer
   
   // Additional colors
-  card: '#2C2416',
-  notification: '#EF4444',
+  card: '#2B2D31',
+  notification: '#FF3B30',
 };
 
 export const fieldColors = {
   // Primary colors - High contrast for outdoor visibility
-  primary: '#FDB913', // Bright yellow for visibility
-  secondary: '#FF6B00', // Bright orange
-  accent: '#FFD700', // Bright gold
-  highlight: '#FFED4E', // Very bright yellow
-  success: '#00C853',
+  primary: '#FF5722', // Deep Orange
+  secondary: '#FF7043', // Lighter Deep Orange
+  accent: '#00BCD4', // Teal for highlights
+  highlight: '#FFD600', // Yellow for highlights (high visibility)
+  success: '#00E5A0', // Mint/Teal Green
   error: '#FF1744',
-  warning: '#FFD600',
-  info: '#2196F3',
+  warning: '#FFD600', // Safety Yellow (high visibility)
+  info: '#00BCD4',
   
-  // Background colors - Slightly tinted for reduced glare
-  background: '#FFF8DC', // Cornsilk - reduces glare
-  cardBackground: '#FFFFFF',
+  // Background colors - Slightly lighter for outdoor visibility
+  background: '#2A2A2D', // Lighter gunmetal for better visibility
+  cardBackground: '#3B3D41', // Lighter dark gray
   
   // Text colors - High contrast
-  text: '#000000',
-  textSecondary: '#424242',
+  text: '#FFFFFF',
+  textSecondary: '#E0E0E0',
   
   // Border colors
-  border: '#D4A72C',
+  border: '#4A4B4F',
+  
+  // Navigation colors
+  navigationBackground: '#0F0F10', // Charcoal
   
   // Additional colors
-  card: '#FFFFFF',
+  card: '#3B3D41',
   notification: '#FF1744',
 };
 
