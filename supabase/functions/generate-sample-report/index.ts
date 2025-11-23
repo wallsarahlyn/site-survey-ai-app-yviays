@@ -199,26 +199,6 @@ function generateSampleData(reportType: 'basic' | 'pro' | 'premium'): SampleInsp
   return baseData;
 }
 
-function getSeverityColor(severity: string): [number, number, number] {
-  switch (severity) {
-    case 'none': return [0.06, 0.73, 0.51];
-    case 'minor': return [0.55, 0.76, 0.29];
-    case 'moderate': return [0.96, 0.62, 0.04];
-    case 'severe': return [0.94, 0.27, 0.27];
-    default: return [0.46, 0.46, 0.46];
-  }
-}
-
-function getConditionColor(condition: string): [number, number, number] {
-  switch (condition) {
-    case 'excellent': return [0.06, 0.73, 0.51];
-    case 'good': return [0.55, 0.76, 0.29];
-    case 'fair': return [0.96, 0.62, 0.04];
-    case 'poor': return [0.94, 0.27, 0.27];
-    default: return [0.46, 0.46, 0.46];
-  }
-}
-
 async function generateSamplePDF(inspection: SampleInspectionData, reportType: string): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
@@ -394,7 +374,7 @@ async function generateSamplePDF(inspection: SampleInspectionData, reportType: s
     color: rgb(1, 1, 1),
   });
 
-  // Add more pages based on report type (simplified for sample)
+  // Add more pages based on report type
   addNewPage();
   yPosition = pageHeight - margin;
 
@@ -472,8 +452,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('Received request to generate sample report');
+
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('Missing authorization header');
       throw new Error('Missing authorization header');
     }
 
@@ -493,20 +476,28 @@ Deno.serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
+      console.error('Unauthorized:', userError);
       throw new Error('Unauthorized');
     }
 
-    const { reportType } = await req.json();
+    console.log('User authenticated:', user.id);
+
+    const requestBody = await req.json();
+    console.log('Request body:', requestBody);
+
+    const { reportType } = requestBody;
 
     if (!reportType || !['basic', 'pro', 'premium'].includes(reportType)) {
-      throw new Error('Invalid report type');
+      console.error('Invalid report type:', reportType);
+      throw new Error('Invalid report type. Must be basic, pro, or premium.');
     }
 
     console.log('Generating sample report:', reportType);
 
     const sampleData = generateSampleData(reportType as 'basic' | 'pro' | 'premium');
-    const pdfBytes = await generateSamplePDF(sampleData, reportType);
+    console.log('Sample data generated');
 
+    const pdfBytes = await generateSamplePDF(sampleData, reportType);
     console.log('Sample PDF generated successfully, size:', pdfBytes.length);
 
     return new Response(pdfBytes, {
@@ -518,8 +509,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error generating sample PDF:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

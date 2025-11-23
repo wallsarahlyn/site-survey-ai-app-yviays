@@ -23,6 +23,8 @@ const { width: screenWidth } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const isMobile = screenWidth < 768;
 
+const SUPABASE_URL = "https://xnmhalybnxbvfaausuru.supabase.co";
+
 interface PricingCardProps {
   title: string;
   price: string;
@@ -104,51 +106,57 @@ export default function LandingPage() {
         return;
       }
 
+      // Get the auth token
+      const token = session.access_token;
+      console.log('Auth token obtained');
+
       // Call the Edge Function to generate sample PDF
-      const { data, error } = await supabase.functions.invoke('generate-sample-report', {
-        body: { reportType },
+      const url = `${SUPABASE_URL}/functions/v1/generate-sample-report`;
+      console.log('Calling Edge Function:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reportType }),
       });
 
-      if (error) {
-        console.error('Error generating sample report:', error);
-        alert('Failed to generate sample report. Please try again.');
-        setIsGeneratingSample(false);
-        return;
-      }
+      console.log('Response status:', response.status);
 
-      if (!data) {
-        throw new Error('No PDF data returned from server');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to generate sample report: ${response.status} ${response.statusText}\n${errorText}`);
       }
 
       console.log('Sample report generated successfully');
 
-      // Convert the response to a blob and save it
-      const blob = data instanceof Blob ? data : new Blob([data], { type: 'application/pdf' });
+      // Get the PDF as an ArrayBuffer
+      const arrayBuffer = await response.arrayBuffer();
+      console.log('PDF size:', arrayBuffer.byteLength);
       
+      // Convert ArrayBuffer to base64
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < uint8Array.length; i++) {
+        binary += String.fromCharCode(uint8Array[i]);
+      }
+      const base64 = btoa(binary);
+
       // Create a file URI
       const fileName = `sample-${reportType}-report.pdf`;
       const fileUri = `${FileSystem.documentDirectory}${fileName}`;
 
-      // Convert blob to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          const base64data = reader.result as string;
-          const base64 = base64data.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-
-      const base64 = await base64Promise;
+      console.log('Saving PDF to:', fileUri);
 
       // Write the file
       await FileSystem.writeAsStringAsync(fileUri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      console.log('Sample PDF saved to:', fileUri);
+      console.log('Sample PDF saved successfully');
 
       // Share the PDF
       if (await Sharing.isAvailableAsync()) {
@@ -163,7 +171,7 @@ export default function LandingPage() {
 
     } catch (error) {
       console.error('Error generating sample report:', error);
-      alert('Failed to generate sample report. Please try again.');
+      alert(`Failed to generate sample report. Please try again.\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGeneratingSample(false);
     }
