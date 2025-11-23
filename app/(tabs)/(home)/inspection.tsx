@@ -16,6 +16,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { analyzeImages } from '@/utils/aiAnalysis';
 import { generateQuote } from '@/utils/quoteGenerator';
 import { generateInspectionPDF } from '@/utils/pdfGenerator';
+import { saveInspection } from '@/utils/supabaseHelpers';
 import { InspectionReport } from '@/types/inspection';
 import ImageUploader from '@/components/ImageUploader';
 import AnalysisResults from '@/components/AnalysisResults';
@@ -40,6 +41,7 @@ export default function InspectionScreen() {
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check authentication status on mount
@@ -103,6 +105,49 @@ export default function InspectionScreen() {
     }
   };
 
+  const handleSaveInspection = async () => {
+    if (!analysis || !quote) {
+      Alert.alert('Incomplete Data', 'Please complete the analysis first.');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const report: InspectionReport = {
+        id: `INS-${Date.now()}`,
+        propertyAddress: propertyAddress || 'Unknown Address',
+        inspectionDate: new Date(),
+        images,
+        aiAnalysis: analysis,
+        quote,
+        roofDiagram: roofDiagram || undefined,
+        notes: '',
+      };
+
+      const inspectionId = await saveInspection(report);
+      
+      if (inspectionId) {
+        Alert.alert(
+          'Inspection Saved',
+          'Your inspection has been saved to your account!',
+          [{ text: 'OK' }]
+        );
+      } else {
+        throw new Error('Failed to save inspection');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      Alert.alert(
+        'Save Error',
+        'Failed to save inspection. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleGeneratePDF = async () => {
     if (!analysis || !quote) {
       Alert.alert('Incomplete Data', 'Please complete the analysis first.');
@@ -120,6 +165,7 @@ export default function InspectionScreen() {
         aiAnalysis: analysis,
         quote,
         roofDiagram: roofDiagram || undefined,
+        notes: '',
       };
 
       await generateInspectionPDF(report);
@@ -230,22 +276,34 @@ export default function InspectionScreen() {
 
             <View style={styles.actionButtons}>
               <TouchableOpacity
-                style={[styles.pdfButton, { backgroundColor: colors.primary }]}
+                style={[styles.actionButton, { backgroundColor: colors.success }]}
+                onPress={handleSaveInspection}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.actionButtonText}>Save Inspection</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.primary }]}
                 onPress={handleGeneratePDF}
                 disabled={isGeneratingPDF}
               >
                 {isGeneratingPDF ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.pdfButtonText}>Generate PDF Report</Text>
+                  <Text style={styles.actionButtonText}>Generate PDF Report</Text>
                 )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.resetButton, { backgroundColor: colors.error }]}
+                style={[styles.actionButton, { backgroundColor: colors.error }]}
                 onPress={handleReset}
               >
-                <Text style={styles.resetButtonText}>Start New Inspection</Text>
+                <Text style={styles.actionButtonText}>Start New Inspection</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -343,24 +401,13 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
   },
-  pdfButton: {
+  actionButton: {
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  pdfButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  resetButton: {
-    height: 56,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  resetButtonText: {
+  actionButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',

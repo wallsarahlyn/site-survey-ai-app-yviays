@@ -1,6 +1,7 @@
 
 import { AIAnalysisResult } from '@/types/inspection';
 import { supabase } from '@/app/integrations/supabase/client';
+import { convertImageToBase64, uploadImageToStorage } from './supabaseHelpers';
 
 export async function analyzeImages(imageUris: string[]): Promise<AIAnalysisResult> {
   console.log('Starting AI analysis for', imageUris.length, 'images');
@@ -13,12 +14,45 @@ export async function analyzeImages(imageUris: string[]): Promise<AIAnalysisResu
       throw new Error('User must be authenticated to analyze images');
     }
 
-    // Prepare images for API call
-    const images = imageUris.map(uri => ({ uri }));
+    // Upload images to Supabase Storage and get public URLs
+    console.log('Uploading images to storage...');
+    const uploadedImages = await Promise.all(
+      imageUris.map(async (uri, index) => {
+        try {
+          // Try to upload to storage first
+          const publicUrl = await uploadImageToStorage(uri, `analysis-${Date.now()}-${index}.jpg`);
+          
+          if (publicUrl) {
+            return { uri: publicUrl };
+          }
+          
+          // Fallback to base64 if upload fails
+          console.log('Upload failed, converting to base64...');
+          const base64 = await convertImageToBase64(uri);
+          if (base64) {
+            return { base64 };
+          }
+          
+          return null;
+        } catch (error) {
+          console.error('Error processing image:', error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out failed uploads
+    const validImages = uploadedImages.filter(img => img !== null);
+
+    if (validImages.length === 0) {
+      throw new Error('Failed to process any images');
+    }
+
+    console.log(`Successfully processed ${validImages.length} images`);
 
     // Call the Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('analyze-images', {
-      body: { images },
+      body: { images: validImages },
     });
 
     if (error) {

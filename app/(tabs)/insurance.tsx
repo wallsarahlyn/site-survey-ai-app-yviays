@@ -14,6 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useInspection } from '@/contexts/InspectionContext';
 import { fetchHistoricalAnalysis } from '@/utils/historicalDataFetcher';
 import { generateInsuranceVerificationPDF } from '@/utils/insurancePdfGenerator';
+import { saveHistoricalAnalysis } from '@/utils/supabaseHelpers';
 import HistoricalAnalysisDisplay from '@/components/HistoricalAnalysisDisplay';
 import { InspectionReport } from '@/types/inspection';
 import { supabase } from '@/app/integrations/supabase/client';
@@ -34,6 +35,7 @@ export default function InsuranceScreen() {
   const [localAddress, setLocalAddress] = useState(propertyAddress);
   const [isFetching, setIsFetching] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check authentication status on mount
@@ -87,6 +89,38 @@ export default function InsuranceScreen() {
     }
   };
 
+  const handleSaveAnalysis = async () => {
+    if (!historicalAnalysis) {
+      Alert.alert('No Data', 'Please fetch historical data first.');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const analysisId = await saveHistoricalAnalysis(historicalAnalysis);
+      
+      if (analysisId) {
+        Alert.alert(
+          'Analysis Saved',
+          'Your historical analysis has been saved to your account!',
+          [{ text: 'OK' }]
+        );
+      } else {
+        throw new Error('Failed to save analysis');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      Alert.alert(
+        'Save Error',
+        'Failed to save historical analysis. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleGeneratePDF = async () => {
     if (!historicalAnalysis) {
       Alert.alert('No Data', 'Please fetch historical data first.');
@@ -113,6 +147,7 @@ export default function InsuranceScreen() {
         aiAnalysis: analysis,
         quote,
         roofDiagram: roofDiagram || undefined,
+        notes: '',
       };
 
       await generateInsuranceVerificationPDF(report, historicalAnalysis);
@@ -189,19 +224,33 @@ export default function InsuranceScreen() {
               <HistoricalAnalysisDisplay analysis={historicalAnalysis} />
             </View>
 
-            <TouchableOpacity
-              style={[styles.pdfButton, { backgroundColor: colors.primary }]}
-              onPress={handleGeneratePDF}
-              disabled={isGeneratingPDF || !analysis || !quote}
-            >
-              {isGeneratingPDF ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.pdfButtonText}>
-                  Generate Insurance Report
-                </Text>
-              )}
-            </TouchableOpacity>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.success }]}
+                onPress={handleSaveAnalysis}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.actionButtonText}>Save Analysis</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                onPress={handleGeneratePDF}
+                disabled={isGeneratingPDF || !analysis || !quote}
+              >
+                {isGeneratingPDF ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.actionButtonText}>
+                    Generate Insurance Report
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
 
             {(!analysis || !quote) && (
               <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
@@ -304,14 +353,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  pdfButton: {
+  actionButtons: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  actionButton: {
     height: 56,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
   },
-  pdfButtonText: {
+  actionButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
