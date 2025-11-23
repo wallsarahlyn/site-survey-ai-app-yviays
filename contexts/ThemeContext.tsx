@@ -39,3 +39,6 @@ export function useThemeContext() {
   }
   return context;
 }
+
+// Export useTheme as an alias for useThemeContext for convenience
+export const useTheme = useThemeContext;

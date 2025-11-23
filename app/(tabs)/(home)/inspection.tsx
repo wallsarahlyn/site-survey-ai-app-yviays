@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useInspection } from '@/contexts/InspectionContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useThemeContext } from '@/contexts/ThemeContext';
 import { analyzeImages } from '@/utils/aiAnalysis';
 import { generateQuote } from '@/utils/quoteGenerator';
 import { generateInspectionPDF } from '@/utils/pdfGenerator';
@@ -25,7 +25,7 @@ import { supabase } from '@/app/integrations/supabase/client';
 
 export default function InspectionScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors } = useThemeContext();
   const {
     images,
     setImages,
@@ -216,8 +216,8 @@ export default function InspectionScreen() {
         </View>
 
         {!isAuthenticated && (
-          <View style={[styles.warningCard, { backgroundColor: colors.cardBackground, borderColor: '#F59E0B' }]}>
-            <Text style={[styles.warningTitle, { color: '#F59E0B' }]}>⚠️ Sign In Required</Text>
+          <View style={[styles.warningCard, { backgroundColor: colors.cardBackground, borderColor: colors.warning }]}>
+            <Text style={[styles.warningTitle, { color: colors.warning }]}>⚠️ Sign In Required</Text>
             <Text style={[styles.warningText, { color: colors.textSecondary }]}>
               AI analysis requires authentication. Please sign in from the Profile tab to use this feature.
             </Text>

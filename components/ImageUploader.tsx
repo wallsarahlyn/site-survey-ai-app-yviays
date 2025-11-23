@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { colors } from '@/styles/commonStyles';
+import { useThemeContext } from '@/contexts/ThemeContext';
 import { UploadedImage } from '@/types/inspection';
 import { IconSymbol } from './IconSymbol';
 
@@ -12,8 +12,9 @@ interface ImageUploaderProps {
   maxImages?: number;
 }
 
-export function ImageUploader({ images, onImagesChange, maxImages = 10 }: ImageUploaderProps) {
+export default function ImageUploader({ images, onImagesChange, maxImages = 10 }: ImageUploaderProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const { colors } = useThemeContext();
 
   const pickImages = async () => {
     if (images.length >= maxImages) {
@@ -106,7 +107,7 @@ export function ImageUploader({ images, onImagesChange, maxImages = 10 }: ImageU
     <View style={styles.container}>
       <View style={styles.buttonRow}>
         <TouchableOpacity 
-          style={[styles.button, styles.primaryButton]} 
+          style={[styles.button, styles.primaryButton, { backgroundColor: colors.primary }]} 
           onPress={pickImages}
           disabled={isLoading}
         >
@@ -120,7 +121,7 @@ export function ImageUploader({ images, onImagesChange, maxImages = 10 }: ImageU
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.button, styles.secondaryButton]} 
+          style={[styles.button, styles.secondaryButton, { backgroundColor: colors.secondary }]} 
           onPress={takePhoto}
           disabled={isLoading}
         >
@@ -136,13 +137,13 @@ export function ImageUploader({ images, onImagesChange, maxImages = 10 }: ImageU
 
       {images.length > 0 && (
         <View style={styles.imagesContainer}>
-          <Text style={styles.imageCount}>{images.length} image(s) uploaded</Text>
+          <Text style={[styles.imageCount, { color: colors.textSecondary }]}>{images.length} image(s) uploaded</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
             {images.map((image) => (
               <View key={image.id} style={styles.imageWrapper}>
-                <Image source={{ uri: image.uri }} style={styles.image} />
+                <Image source={{ uri: image.uri }} style={[styles.image, { backgroundColor: colors.border }]} />
                 <TouchableOpacity 
-                  style={styles.removeButton}
+                  style={[styles.removeButton, { backgroundColor: colors.card }]}
                   onPress={() => removeImage(image.id)}
                 >
                   <IconSymbol 
@@ -180,10 +181,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButton: {
-    backgroundColor: colors.primary,
+    // backgroundColor set dynamically
   },
   secondaryButton: {
-    backgroundColor: colors.secondary,
+    // backgroundColor set dynamically
   },
   buttonText: {
     color: '#FFFFFF',
@@ -195,7 +196,6 @@ const styles = StyleSheet.create({
   },
   imageCount: {
     fontSize: 14,
-    color: colors.textSecondary,
     marginBottom: 12,
     fontWeight: '500',
   },
@@ -210,13 +210,11 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 8,
-    backgroundColor: colors.border,
   },
   removeButton: {
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: colors.card,
     borderRadius: 12,
   },
 });

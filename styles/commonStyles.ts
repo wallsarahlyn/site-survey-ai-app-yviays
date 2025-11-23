@@ -5,9 +5,12 @@ export const colors = {
   // Primary colors
   primary: '#2563EB',
   secondary: '#10B981',
+  accent: '#8B5CF6',
+  highlight: '#F59E0B',
   success: '#10B981',
   error: '#EF4444',
   warning: '#F59E0B',
+  info: '#3B82F6',
   
   // Background colors
   background: '#FFFFFF',
@@ -29,9 +32,12 @@ export const darkColors = {
   // Primary colors
   primary: '#3B82F6',
   secondary: '#10B981',
+  accent: '#A78BFA',
+  highlight: '#FBBF24',
   success: '#10B981',
   error: '#EF4444',
   warning: '#F59E0B',
+  info: '#60A5FA',
   
   // Background colors
   background: '#111827',
@@ -53,9 +59,12 @@ export const fieldColors = {
   // Primary colors - High contrast for outdoor visibility
   primary: '#FF6B00',
   secondary: '#00C853',
+  accent: '#9C27B0',
+  highlight: '#FFD600',
   success: '#00C853',
   error: '#FF1744',
   warning: '#FFD600',
+  info: '#2196F3',
   
   // Background colors - Slightly tinted for reduced glare
   background: '#F5F5DC',

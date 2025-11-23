@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { colors } from '@/styles/commonStyles';
+import { useThemeContext } from '@/contexts/ThemeContext';
 import { AIAnalysisResult } from '@/types/inspection';
 import { IconSymbol } from './IconSymbol';
 
@@ -9,11 +9,13 @@ interface AnalysisResultsProps {
   analysis: AIAnalysisResult;
 }
 
-export function AnalysisResults({ analysis }: AnalysisResultsProps) {
+export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
+  const { colors } = useThemeContext();
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'none': return colors.secondary;
-      case 'minor': return colors.highlight;
+      case 'minor': return colors.warning;
       case 'moderate': return colors.accent;
       case 'severe': return colors.error;
       default: return colors.textSecondary;
@@ -33,10 +35,10 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>AI Analysis Results</Text>
+        <Text style={[styles.title, { color: colors.text }]}>AI Analysis Results</Text>
       </View>
 
-      <View style={[styles.card, { backgroundColor: getConditionColor(analysis.overallCondition) }]}>
+      <View style={[styles.card, styles.conditionCard, { backgroundColor: getConditionColor(analysis.overallCondition) }]}>
         <Text style={styles.cardTitle}>Overall Condition</Text>
         <Text style={styles.conditionText}>{analysis.overallCondition.toUpperCase()}</Text>
       </View>
@@ -49,11 +51,11 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
             size={24} 
             color={colors.primary} 
           />
-          <Text style={styles.sectionTitle}>Roof Damage Assessment</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Roof Damage Assessment</Text>
         </View>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.statusRow}>
-            <Text style={styles.label}>Status:</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Status:</Text>
             <View style={[
               styles.badge, 
               { backgroundColor: analysis.roofDamage.detected ? colors.error : colors.secondary }
@@ -67,23 +69,23 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
           {analysis.roofDamage.detected && (
             <>
               <View style={styles.statusRow}>
-                <Text style={styles.label}>Severity:</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Severity:</Text>
                 <View style={[styles.badge, { backgroundColor: getSeverityColor(analysis.roofDamage.severity) }]}>
                   <Text style={styles.badgeText}>{analysis.roofDamage.severity.toUpperCase()}</Text>
                 </View>
               </View>
 
-              <Text style={styles.subsectionTitle}>Issues Identified:</Text>
+              <Text style={[styles.subsectionTitle, { color: colors.text }]}>Issues Identified:</Text>
               {analysis.roofDamage.issues.map((issue, index) => (
                 <View key={index} style={styles.listItem}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.listText}>{issue}</Text>
+                  <Text style={[styles.bullet, { color: colors.primary }]}>•</Text>
+                  <Text style={[styles.listText, { color: colors.textSecondary }]}>{issue}</Text>
                 </View>
               ))}
             </>
           )}
 
-          <Text style={styles.confidence}>
+          <Text style={[styles.confidence, { color: colors.textSecondary }]}>
             Confidence: {(analysis.roofDamage.confidence * 100).toFixed(1)}%
           </Text>
         </View>
@@ -97,11 +99,11 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
             size={24} 
             color={colors.primary} 
           />
-          <Text style={styles.sectionTitle}>Structural Issues</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Structural Issues</Text>
         </View>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.statusRow}>
-            <Text style={styles.label}>Status:</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Status:</Text>
             <View style={[
               styles.badge, 
               { backgroundColor: analysis.structuralIssues.detected ? colors.error : colors.secondary }
@@ -114,17 +116,17 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
 
           {analysis.structuralIssues.detected && analysis.structuralIssues.issues.length > 0 && (
             <>
-              <Text style={styles.subsectionTitle}>Issues Identified:</Text>
+              <Text style={[styles.subsectionTitle, { color: colors.text }]}>Issues Identified:</Text>
               {analysis.structuralIssues.issues.map((issue, index) => (
                 <View key={index} style={styles.listItem}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.listText}>{issue}</Text>
+                  <Text style={[styles.bullet, { color: colors.primary }]}>•</Text>
+                  <Text style={[styles.listText, { color: colors.textSecondary }]}>{issue}</Text>
                 </View>
               ))}
             </>
           )}
 
-          <Text style={styles.confidence}>
+          <Text style={[styles.confidence, { color: colors.textSecondary }]}>
             Confidence: {(analysis.structuralIssues.confidence * 100).toFixed(1)}%
           </Text>
         </View>
@@ -138,11 +140,11 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
             size={24} 
             color={colors.primary} 
           />
-          <Text style={styles.sectionTitle}>Solar Compatibility</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Solar Compatibility</Text>
         </View>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.statusRow}>
-            <Text style={styles.label}>Suitability:</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Suitability:</Text>
             <View style={[
               styles.badge, 
               { backgroundColor: analysis.solarCompatibility.suitable ? colors.secondary : colors.textSecondary }
@@ -154,20 +156,20 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
           </View>
 
           <View style={styles.scoreContainer}>
-            <Text style={styles.scoreLabel}>Compatibility Score</Text>
-            <Text style={styles.scoreValue}>{analysis.solarCompatibility.score.toFixed(0)}/100</Text>
+            <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>Compatibility Score</Text>
+            <Text style={[styles.scoreValue, { color: colors.primary }]}>{analysis.solarCompatibility.score.toFixed(0)}/100</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Estimated Capacity:</Text>
-            <Text style={styles.value}>{analysis.solarCompatibility.estimatedCapacity}</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Estimated Capacity:</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{analysis.solarCompatibility.estimatedCapacity}</Text>
           </View>
 
-          <Text style={styles.subsectionTitle}>Factors:</Text>
+          <Text style={[styles.subsectionTitle, { color: colors.text }]}>Factors:</Text>
           {analysis.solarCompatibility.factors.map((factor, index) => (
             <View key={index} style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>{factor}</Text>
+              <Text style={[styles.bullet, { color: colors.primary }]}>•</Text>
+              <Text style={[styles.listText, { color: colors.textSecondary }]}>{factor}</Text>
             </View>
           ))}
         </View>
@@ -179,24 +181,24 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
             ios_icon_name="exclamationmark.triangle.fill" 
             android_material_icon_name="warning" 
             size={24} 
-            color={colors.accent} 
+            color={colors.warning} 
           />
-          <Text style={styles.sectionTitle}>Inspection Concerns</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Inspection Concerns</Text>
         </View>
-        <View style={styles.card}>
-          <Text style={styles.subsectionTitle}>Concerns:</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.subsectionTitle, { color: colors.text }]}>Concerns:</Text>
           {analysis.inspectionConcerns.concerns.map((concern, index) => (
             <View key={index} style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>{concern}</Text>
+              <Text style={[styles.bullet, { color: colors.primary }]}>•</Text>
+              <Text style={[styles.listText, { color: colors.textSecondary }]}>{concern}</Text>
             </View>
           ))}
 
-          <Text style={[styles.subsectionTitle, { marginTop: 16 }]}>Recommendations:</Text>
+          <Text style={[styles.subsectionTitle, { marginTop: 16, color: colors.text }]}>Recommendations:</Text>
           {analysis.inspectionConcerns.recommendations.map((rec, index) => (
             <View key={index} style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>{rec}</Text>
+              <Text style={[styles.bullet, { color: colors.primary }]}>•</Text>
+              <Text style={[styles.listText, { color: colors.textSecondary }]}>{rec}</Text>
             </View>
           ))}
         </View>
@@ -215,7 +217,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.text,
   },
   section: {
     marginBottom: 20,
@@ -229,14 +230,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
   },
   card: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+  },
+  conditionCard: {
+    marginBottom: 20,
   },
   cardTitle: {
     fontSize: 14,
@@ -260,11 +261,9 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
   },
   value: {
     fontSize: 14,
-    color: colors.text,
   },
   badge: {
     paddingHorizontal: 12,
@@ -279,7 +278,6 @@ const styles = StyleSheet.create({
   subsectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
     marginTop: 12,
     marginBottom: 8,
   },
@@ -290,19 +288,16 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 14,
-    color: colors.primary,
     marginRight: 8,
     fontWeight: '700',
   },
   listText: {
     flex: 1,
     fontSize: 14,
-    color: colors.textSecondary,
     lineHeight: 20,
   },
   confidence: {
     fontSize: 12,
-    color: colors.textSecondary,
     fontStyle: 'italic',
     marginTop: 12,
   },
@@ -312,13 +307,11 @@ const styles = StyleSheet.create({
   },
   scoreLabel: {
     fontSize: 14,
-    color: colors.textSecondary,
     marginBottom: 4,
   },
   scoreValue: {
     fontSize: 36,
     fontWeight: '700',
-    color: colors.primary,
   },
   infoRow: {
     flexDirection: 'row',
