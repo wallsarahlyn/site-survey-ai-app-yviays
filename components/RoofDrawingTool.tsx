@@ -5,6 +5,7 @@ import Svg, { Polygon, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { RoofFacet, RoofDiagram } from '@/types/inspection';
 import { IconSymbol } from './IconSymbol';
+import { AddressAutocomplete } from './AddressAutocomplete';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -26,10 +27,10 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
   const [facetLabel, setFacetLabel] = useState('');
   const [facetPitch, setFacetPitch] = useState('6');
   const [propertyAddress, setPropertyAddress] = useState(initialAddress || '');
-  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 37.7749, lng: -122.4194 });
-  const [mapZoom, setMapZoom] = useState(19);
+  const [addressCoordinates, setAddressCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const calculateArea = (points: { x: number; y: number }[]): number => {
     if (points.length < 3) return 0;
@@ -72,55 +73,13 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
     };
   };
 
-  const handleAddressChange = async (text: string) => {
-    setPropertyAddress(text);
-    
-    if (text.length > 3) {
-      try {
-        console.log('Fetching address suggestions for:', text);
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=YOUR_GOOGLE_API_KEY`
-        );
-        const data = await response.json();
-        
-        if (data.predictions && data.predictions.length > 0) {
-          const suggestions = data.predictions.map((p: any) => p.description);
-          setAddressSuggestions(suggestions);
-          setShowSuggestions(true);
-        } else {
-          setAddressSuggestions([]);
-          setShowSuggestions(false);
-        }
-      } catch (error) {
-        console.error('Error fetching address suggestions:', error);
-        setAddressSuggestions([]);
-        setShowSuggestions(false);
-      }
-    } else {
-      setAddressSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const selectAddress = async (address: string) => {
-    setPropertyAddress(address);
-    setShowSuggestions(false);
-    
-    try {
-      console.log('Geocoding address:', address);
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=YOUR_GOOGLE_API_KEY`
-      );
-      const data = await response.json();
-      
-      if (data.results && data.results.length > 0) {
-        const location = data.results[0].geometry.location;
-        setMapCenter({ lat: location.lat, lng: location.lng });
-        console.log('Map centered at:', location);
-      }
-    } catch (error) {
-      console.error('Error geocoding address:', error);
-    }
+  const handleAddressSelect = (addressComponents: any) => {
+    console.log('Address selected for roof drawing:', addressComponents);
+    setPropertyAddress(addressComponents.formattedAddress);
+    setAddressCoordinates({
+      latitude: addressComponents.latitude,
+      longitude: addressComponents.longitude,
+    });
   };
 
   const handleCanvasPress = (event: any) => {
@@ -896,50 +855,22 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
       <View style={styles.header}>
         <Text style={styles.title}>Roof Drawing Tool</Text>
         <Text style={styles.subtitle}>
-          Draw roof facets over satellite imagery. Note: Google Maps integration requires a valid API key.
+          Draw roof facets over satellite imagery with validated address input
         </Text>
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
-        <TextInput
-          style={[styles.addressInput, { 
-            backgroundColor: colors.background, 
-            color: colors.text,
-            borderColor: colors.border 
-          }]}
-          placeholder="Enter property address (e.g., 123 Main St, City, State ZIP)"
-          placeholderTextColor={colors.textSecondary}
+        <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+          Enter and validate the property address using Google Maps autocomplete
+        </Text>
+        <AddressAutocomplete
           value={propertyAddress}
-          onChangeText={handleAddressChange}
+          onChangeText={setPropertyAddress}
+          onAddressSelect={handleAddressSelect}
+          placeholder="Start typing an address..."
           multiline
         />
-        {showSuggestions && addressSuggestions.length > 0 && (
-          <View style={[styles.suggestionsContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
-            {addressSuggestions.map((suggestion, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.suggestionItem, { borderBottomColor: colors.border }]}
-                onPress={() => selectAddress(suggestion)}
-              >
-                <Text style={[styles.suggestionText, { color: colors.text }]}>{suggestion}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-        <View style={styles.warningBox}>
-          <IconSymbol ios_icon_name="exclamationmark.triangle.fill" android_material_icon_name="warning" size={20} color="#F59E0B" />
-          <Text style={styles.warningText}>
-            Google Maps API integration is not fully configured. To enable satellite imagery and address autocomplete, you need to:
-          </Text>
-        </View>
-        <View style={styles.instructionsList}>
-          <Text style={styles.instructionText}>1. Get a Google Maps API key from Google Cloud Console</Text>
-          <Text style={styles.instructionText}>2. Enable Maps JavaScript API and Places API</Text>
-          <Text style={styles.instructionText}>3. Replace YOUR_GOOGLE_API_KEY in the code with your actual key</Text>
-          <Text style={styles.instructionText}>4. For web: Add the API key to your HTML or use a Maps library</Text>
-          <Text style={styles.instructionText}>5. For native: Configure react-native-maps (not supported in Natively)</Text>
-        </View>
       </View>
 
       <View style={styles.canvasContainer}>
@@ -997,7 +928,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
             })}
 
             {currentPoints.length > 0 && (
-              <>
+              <React.Fragment>
                 {currentPoints.length > 2 && (
                   <Polygon
                     points={currentPoints.map(p => `${p.x},${p.y}`).join(' ')}
@@ -1022,7 +953,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
                     )}
                   </React.Fragment>
                 ))}
-              </>
+              </React.Fragment>
             )}
           </Svg>
         </View>
@@ -1079,7 +1010,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
           </TouchableOpacity>
 
           {facets.length > 0 && (
-            <>
+            <React.Fragment>
               <TouchableOpacity style={[styles.button, styles.reportButton]} onPress={generateRoofReport}>
                 <IconSymbol ios_icon_name="doc.text.fill" android_material_icon_name="description" size={20} color="#FFFFFF" />
                 <Text style={styles.buttonText}>Generate Roof Report</Text>
@@ -1093,7 +1024,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
                 <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check_circle" size={20} color="#FFFFFF" />
                 <Text style={styles.buttonText}>Save Diagram</Text>
               </TouchableOpacity>
-            </>
+            </React.Fragment>
           )}
         </View>
       )}
@@ -1156,54 +1087,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  addressInput: {
-    height: 80,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  sectionDescription: {
     fontSize: 14,
-    textAlignVertical: 'top',
-  },
-  suggestionsContainer: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderRadius: 8,
-    maxHeight: 200,
-  },
-  suggestionItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-  },
-  suggestionText: {
-    fontSize: 14,
-  },
-  warningBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFF9E6',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-    gap: 8,
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#92400E',
-    lineHeight: 18,
-  },
-  instructionsList: {
-    marginTop: 8,
-    paddingLeft: 8,
-  },
-  instructionText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 4,
-    lineHeight: 18,
+    lineHeight: 20,
+    marginBottom: 16,
   },
   canvasContainer: {
     backgroundColor: colors.card,

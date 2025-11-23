@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  TextInput,
   Platform,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -20,6 +19,7 @@ import HistoricalAnalysisDisplay from '@/components/HistoricalAnalysisDisplay';
 import { InspectionReport } from '@/types/inspection';
 import { supabase } from '@/app/integrations/supabase/client';
 import { IconSymbol } from '@/components/IconSymbol';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 export default function InsuranceScreen() {
   const { colors } = useTheme();
@@ -35,6 +35,10 @@ export default function InsuranceScreen() {
   } = useInspection();
 
   const [localAddress, setLocalAddress] = useState(propertyAddress);
+  const [addressCoordinates, setAddressCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,6 +52,15 @@ export default function InsuranceScreen() {
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setIsAuthenticated(!!session);
+  };
+
+  const handleAddressSelect = (addressComponents: any) => {
+    console.log('Address selected:', addressComponents);
+    setLocalAddress(addressComponents.formattedAddress);
+    setAddressCoordinates({
+      latitude: addressComponents.latitude,
+      longitude: addressComponents.longitude,
+    });
   };
 
   const handleFetchData = async () => {
@@ -69,7 +82,9 @@ export default function InsuranceScreen() {
 
     try {
       console.log('Fetching historical data for:', localAddress);
-      const data = await fetchHistoricalAnalysis(localAddress);
+      console.log('Coordinates:', addressCoordinates);
+      
+      const data = await fetchHistoricalAnalysis(localAddress, addressCoordinates);
       
       setHistoricalAnalysis(data);
       setPropertyAddress(localAddress);
@@ -223,19 +238,15 @@ export default function InsuranceScreen() {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
           </View>
           <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-            Enter the property address to fetch historical weather data, storm events, and risk assessments
+            Enter the property address to fetch historical weather data, storm events, and risk assessments. 
+            The address will be validated and geocoded using Google Maps API.
           </Text>
           
-          <TextInput
-            style={[styles.input, { 
-              backgroundColor: colors.background, 
-              color: colors.text,
-              borderColor: colors.border 
-            }]}
-            placeholder="Enter property address (e.g., 123 Main St, Austin, TX 78701)"
-            placeholderTextColor={colors.textSecondary}
+          <AddressAutocomplete
             value={localAddress}
             onChangeText={setLocalAddress}
+            onAddressSelect={handleAddressSelect}
+            placeholder="Start typing an address..."
             editable={isAuthenticated}
           />
           
@@ -250,7 +261,7 @@ export default function InsuranceScreen() {
             {isFetching ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <>
+              <React.Fragment>
                 <IconSymbol
                   ios_icon_name="cloud.fill"
                   android_material_icon_name="cloud_download"
@@ -260,14 +271,14 @@ export default function InsuranceScreen() {
                 <Text style={styles.fetchButtonText}>
                   {isAuthenticated ? 'Fetch Historical Data' : 'Sign In to Fetch Data'}
                 </Text>
-              </>
+              </React.Fragment>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Historical Analysis Display */}
         {historicalAnalysis && (
-          <>
+          <React.Fragment>
             <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.sectionHeader}>
                 <IconSymbol
@@ -291,7 +302,7 @@ export default function InsuranceScreen() {
                 {isSaving ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <>
+                  <React.Fragment>
                     <IconSymbol
                       ios_icon_name="square.and.arrow.down.fill"
                       android_material_icon_name="save"
@@ -299,7 +310,7 @@ export default function InsuranceScreen() {
                       color="#FFFFFF"
                     />
                     <Text style={styles.actionButtonText}>Save Analysis</Text>
-                  </>
+                  </React.Fragment>
                 )}
               </TouchableOpacity>
 
@@ -314,7 +325,7 @@ export default function InsuranceScreen() {
                 {isGeneratingPDF ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <>
+                  <React.Fragment>
                     <IconSymbol
                       ios_icon_name="doc.text.fill"
                       android_material_icon_name="description"
@@ -324,7 +335,7 @@ export default function InsuranceScreen() {
                     <Text style={styles.actionButtonText}>
                       Generate Insurance Report
                     </Text>
-                  </>
+                  </React.Fragment>
                 )}
               </TouchableOpacity>
             </View>
@@ -359,7 +370,7 @@ export default function InsuranceScreen() {
                 </View>
               </View>
             )}
-          </>
+          </React.Fragment>
         )}
 
         {/* Info Card */}
@@ -476,14 +487,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
   },
-  input: {
-    height: 56,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    marginBottom: 16,
-  },
   fetchButton: {
     height: 56,
     borderRadius: 12,
@@ -491,6 +494,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
+    marginTop: 16,
   },
   fetchButtonText: {
     color: '#FFFFFF',

@@ -5,18 +5,18 @@ This guide explains how to configure the API integrations for the InspectAI app.
 
 ## Overview
 
-InspectAI uses Supabase Edge Functions to securely call external APIs:
+InspectAI uses multiple APIs to provide comprehensive property inspection features:
 
-1. **analyze-images** - Uses OpenAI GPT-4 Vision to analyze property images
-2. **fetch-historical-data** - Fetches historical weather, storm, and risk data
+1. **OpenAI GPT-4 Vision** - AI-powered image analysis (via Supabase Edge Functions)
+2. **Google Maps API** - Address autocomplete, validation, and geocoding
+3. **Historical Data APIs** - Weather, storm, and risk data (via Supabase Edge Functions)
 
-## Required Environment Variables
+## Required API Keys
 
-You need to set up the following environment variables in your Supabase project:
-
-### 1. OpenAI API Key (Required)
+### 1. OpenAI API Key (Required for AI Analysis)
 - **Variable Name:** `OPENAI_API_KEY`
 - **Purpose:** Powers the AI image analysis feature
+- **Where to set:** Supabase Edge Functions secrets
 - **How to get it:**
   1. Go to https://platform.openai.com/
   2. Sign up or log in
@@ -24,51 +24,112 @@ You need to set up the following environment variables in your Supabase project:
   4. Create a new API key
   5. Copy the key (starts with `sk-`)
 
-### 2. Google Maps API Key (Optional)
+**Setting in Supabase:**
+```bash
+supabase secrets set OPENAI_API_KEY=sk-your-key-here
+```
+
+### 2. Google Maps API Key (Required for Address Features)
 - **Variable Name:** `GOOGLE_MAPS_API_KEY`
-- **Purpose:** Geocodes addresses to coordinates for historical data
+- **Purpose:** Address autocomplete, validation, and geocoding
+- **Where to set:** Client-side code (AddressAutocomplete.tsx)
 - **How to get it:**
   1. Go to https://console.cloud.google.com/
   2. Create a new project or select existing
-  3. Enable "Geocoding API"
-  4. Create credentials (API Key)
+  3. Enable the following APIs:
+     - **Places API** (for address autocomplete)
+     - **Geocoding API** (for address validation and coordinates)
+     - **Maps JavaScript API** (optional, for satellite imagery)
+  4. Go to "Credentials" → "Create Credentials" → "API Key"
   5. Copy the API key
+  6. **Important:** Restrict the API key:
+     - For mobile apps: Add your iOS bundle ID and Android package name
+     - For web: Add your domain (e.g., natively.dev)
+     - Restrict to only the APIs you enabled above
+
+**Setting in the app:**
+1. Open `components/AddressAutocomplete.tsx`
+2. Find the line: `const GOOGLE_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';`
+3. Replace `'YOUR_GOOGLE_MAPS_API_KEY'` with your actual API key
+
+**Example:**
+```typescript
+const GOOGLE_API_KEY = 'AIzaSyC1234567890abcdefghijklmnopqrstuv';
+```
 
 ### 3. OpenWeather API Key (Optional)
 - **Variable Name:** `OPENWEATHER_API_KEY`
 - **Purpose:** Fetches weather pattern data
+- **Where to set:** Supabase Edge Functions secrets
 - **How to get it:**
   1. Go to https://openweathermap.org/api
   2. Sign up for a free account
   3. Navigate to API Keys
   4. Copy your API key
 
+**Setting in Supabase:**
+```bash
+supabase secrets set OPENWEATHER_API_KEY=your-key-here
+```
+
 ### 4. NOAA API Key (Optional)
 - **Variable Name:** `NOAA_API_KEY`
 - **Purpose:** Fetches storm event data
+- **Where to set:** Supabase Edge Functions secrets
 - **How to get it:**
   1. Go to https://www.ncdc.noaa.gov/cdo-web/token
   2. Request a token via email
   3. Copy the token when received
 
-## Setting Environment Variables in Supabase
-
-### Via Supabase Dashboard:
-1. Go to your Supabase project dashboard
-2. Navigate to **Settings** → **Edge Functions**
-3. Scroll to **Secrets** section
-4. Click **Add Secret**
-5. Enter the variable name and value
-6. Click **Save**
-
-### Via Supabase CLI:
+**Setting in Supabase:**
 ```bash
-# Set a single secret
-supabase secrets set OPENAI_API_KEY=your_key_here
-
-# Set multiple secrets from a file
-supabase secrets set --env-file .env.local
+supabase secrets set NOAA_API_KEY=your-token-here
 ```
+
+## Google Maps API Setup (Detailed)
+
+### Step 1: Create a Google Cloud Project
+1. Go to https://console.cloud.google.com/
+2. Click "Select a project" → "New Project"
+3. Enter project name (e.g., "InspectAI")
+4. Click "Create"
+
+### Step 2: Enable Required APIs
+1. In the Google Cloud Console, go to "APIs & Services" → "Library"
+2. Search for and enable each of these APIs:
+   - **Places API** - For address autocomplete suggestions
+   - **Geocoding API** - For converting addresses to coordinates
+   - **Maps JavaScript API** - (Optional) For satellite imagery
+
+### Step 3: Create API Key
+1. Go to "APIs & Services" → "Credentials"
+2. Click "Create Credentials" → "API Key"
+3. Copy the API key immediately
+
+### Step 4: Restrict API Key (Important for Security)
+1. Click on the newly created API key to edit it
+2. Under "Application restrictions":
+   - For **iOS**: Select "iOS apps" and add your bundle ID
+   - For **Android**: Select "Android apps" and add your package name and SHA-1 fingerprint
+   - For **Web**: Select "HTTP referrers" and add your domain
+3. Under "API restrictions":
+   - Select "Restrict key"
+   - Check only the APIs you enabled (Places API, Geocoding API, etc.)
+4. Click "Save"
+
+### Step 5: Set Up Billing (Required)
+Google Maps APIs require a billing account, but they offer:
+- **$200 free credit per month**
+- Pay-as-you-go pricing after free credit
+
+**Pricing (as of 2024):**
+- Places Autocomplete: $2.83 per 1,000 requests (first 100,000 free monthly)
+- Geocoding: $5.00 per 1,000 requests (first 40,000 free monthly)
+
+### Step 6: Add API Key to Your App
+1. Open `components/AddressAutocomplete.tsx`
+2. Replace `'YOUR_GOOGLE_MAPS_API_KEY'` with your actual API key
+3. Save the file
 
 ## Testing the APIs
 
@@ -79,57 +140,91 @@ supabase secrets set --env-file .env.local
 4. Upload property images
 5. Click "Analyze with AI"
 
+### Test Address Autocomplete:
+1. Go to Insurance tab or Drawing tab
+2. Start typing an address in the address field
+3. You should see autocomplete suggestions appear
+4. Select an address to validate and geocode it
+
 ### Test Historical Data:
 1. Sign in to the app (Profile tab)
 2. Go to Insurance tab
-3. Enter a property address
+3. Enter a property address using autocomplete
 4. Click "Fetch Historical Data"
 
-## API Costs
+## API Costs & Usage
 
 ### OpenAI GPT-4 Vision:
 - **Model:** gpt-4o
 - **Cost:** ~$0.01-0.03 per image analysis
 - **Usage:** Called when analyzing property images
+- **Monthly estimate:** $10-50 for 500-1,000 analyses
 
-### Google Maps Geocoding:
-- **Free tier:** 40,000 requests/month
-- **Cost after:** $5 per 1,000 requests
+### Google Maps:
+- **Free tier:** $200 credit per month
+- **Places Autocomplete:** $2.83 per 1,000 requests
+- **Geocoding:** $5.00 per 1,000 requests
+- **Monthly estimate:** Free for most users (under $200/month)
 
 ### OpenWeather:
 - **Free tier:** 1,000 calls/day
 - **Cost after:** Paid plans available
+- **Monthly estimate:** Free for most users
 
 ### NOAA:
 - **Free:** No cost, but rate limited
+- **Monthly estimate:** $0
 
 ## Fallback Behavior
 
 If API keys are not configured:
 - **AI Analysis:** Will use mock data with realistic patterns
+- **Address Autocomplete:** Will show a warning message and allow manual entry
 - **Historical Data:** Will use mock data with realistic patterns
 - **Geocoding:** Will use approximate coordinates
 
 The app will continue to work with mock data, but real API integration provides:
 - More accurate property assessments
+- Validated and standardized addresses
 - Real-time weather and storm data
 - Actual historical risk analysis
 - Better insurance underwriting data
 
-## Security Notes
+## Security Best Practices
 
-- Never commit API keys to version control
-- Use environment variables for all sensitive data
-- Rotate API keys periodically
-- Monitor API usage to prevent unexpected costs
-- Set up billing alerts in API provider dashboards
+1. **Never commit API keys to version control**
+   - Add API keys to `.gitignore`
+   - Use environment variables for sensitive data
+
+2. **Restrict API keys properly**
+   - Limit to specific APIs
+   - Limit to specific platforms (iOS, Android, Web)
+   - Add bundle ID/package name restrictions
+
+3. **Monitor API usage**
+   - Set up billing alerts in Google Cloud Console
+   - Monitor OpenAI usage dashboard
+   - Review Supabase Edge Function logs
+
+4. **Rotate API keys periodically**
+   - Change keys every 3-6 months
+   - Immediately rotate if compromised
+
+5. **Use different keys for development and production**
+   - Create separate Google Cloud projects
+   - Use separate OpenAI API keys
 
 ## Troubleshooting
 
-### "API key not configured" error:
-- Verify the environment variable name is correct
-- Check that the secret is set in Supabase
-- Redeploy the Edge Function after setting secrets
+### "Google Maps API key not configured" error:
+- Verify you replaced `'YOUR_GOOGLE_MAPS_API_KEY'` in AddressAutocomplete.tsx
+- Check that the API key is correct (no extra spaces)
+- Ensure Places API is enabled in Google Cloud Console
+
+### "REQUEST_DENIED" error:
+- Check that Places API and Geocoding API are enabled
+- Verify API key restrictions allow your app
+- Ensure billing is set up in Google Cloud Console
 
 ### "Failed to analyze images" error:
 - Check OpenAI API key is valid
@@ -138,13 +233,33 @@ The app will continue to work with mock data, but real API integration provides:
 
 ### "Failed to fetch historical data" error:
 - Verify the address is valid
-- Check API keys are configured
+- Check API keys are configured in Supabase
 - Review Edge Function logs for specific errors
 
-## Support
+### Address autocomplete not showing suggestions:
+- Verify Google Maps API key is set correctly
+- Check that Places API is enabled
+- Ensure you're typing at least 3 characters
+- Check browser/app console for error messages
 
-For issues with:
-- **OpenAI API:** https://help.openai.com/
-- **Google Maps API:** https://developers.google.com/maps/support
-- **Supabase:** https://supabase.com/docs
-- **InspectAI App:** Check the app logs and Edge Function logs in Supabase dashboard
+## Support & Resources
+
+### Google Maps API:
+- Documentation: https://developers.google.com/maps/documentation
+- Support: https://developers.google.com/maps/support
+- Pricing: https://developers.google.com/maps/billing-and-pricing/pricing
+
+### OpenAI API:
+- Documentation: https://platform.openai.com/docs
+- Support: https://help.openai.com/
+- Pricing: https://openai.com/pricing
+
+### Supabase:
+- Documentation: https://supabase.com/docs
+- Support: https://supabase.com/support
+- Edge Functions: https://supabase.com/docs/guides/functions
+
+### InspectAI App:
+- Check the app logs for detailed error messages
+- Review Edge Function logs in Supabase dashboard
+- Check browser console for client-side errors
