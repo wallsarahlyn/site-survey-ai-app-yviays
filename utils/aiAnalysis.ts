@@ -82,7 +82,7 @@ function generateMockAnalysis(): AIAnalysisResult {
   const structuralIssuesDetected = Math.random() > 0.7;
   const solarSuitable = Math.random() > 0.3;
 
-  const severityOptions: Array<'none' | 'minor' | 'moderate' | 'severe'> = ['none', 'minor', 'moderate', 'severe'];
+  const severityOptions: ('none' | 'minor' | 'moderate' | 'severe')[] = ['none', 'minor', 'moderate', 'severe'];
   const severity = roofDamageDetected 
     ? severityOptions[Math.floor(Math.random() * 3) + 1] 
     : 'none';
