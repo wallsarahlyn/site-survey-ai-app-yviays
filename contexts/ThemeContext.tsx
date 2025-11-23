@@ -13,16 +13,9 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const systemColorScheme = useColorScheme();
-  const [mode, setMode] = useState<ThemeMode>(systemColorScheme === 'dark' ? 'dark' : 'light');
+  // Default to light mode
+  const [mode, setMode] = useState<ThemeMode>('light');
   const colors = getTheme(mode);
-
-  useEffect(() => {
-    // Auto-switch based on system preference if not in field mode
-    if (mode !== 'field') {
-      setMode(systemColorScheme === 'dark' ? 'dark' : 'light');
-    }
-  }, [systemColorScheme]);
 
   const toggleMode = () => {
     setMode(current => {

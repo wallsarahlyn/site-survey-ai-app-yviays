@@ -6,10 +6,10 @@ import { InspectionReport } from '@/types/inspection';
 // Helper function to generate color-coded severity badges
 const getSeverityColor = (severity: string): string => {
   switch (severity) {
-    case 'none': return '#4CAF50';
+    case 'none': return '#10B981';
     case 'minor': return '#8BC34A';
-    case 'moderate': return '#FFAB40';
-    case 'severe': return '#F44336';
+    case 'moderate': return '#F59E0B';
+    case 'severe': return '#EF4444';
     default: return '#757575';
   }
 };
@@ -17,10 +17,10 @@ const getSeverityColor = (severity: string): string => {
 // Helper function to generate condition color
 const getConditionColor = (condition: string): string => {
   switch (condition) {
-    case 'excellent': return '#4CAF50';
+    case 'excellent': return '#10B981';
     case 'good': return '#8BC34A';
-    case 'fair': return '#FFAB40';
-    case 'poor': return '#F44336';
+    case 'fair': return '#F59E0B';
+    case 'poor': return '#EF4444';
     default: return '#757575';
   }
 };
@@ -28,7 +28,7 @@ const getConditionColor = (condition: string): string => {
 // Generate QR code data URL (simplified - in production use a QR library)
 const generateQRCode = (reportId: string): string => {
   // This is a placeholder - in production, use a proper QR code generator
-  const qrUrl = `https://inspection-reports.example.com/report/${reportId}`;
+  const qrUrl = `https://inspectai.example.com/report/${reportId}`;
   return `data:image/svg+xml,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
       <rect width="150" height="150" fill="white"/>
@@ -41,7 +41,7 @@ const generateQRCode = (reportId: string): string => {
 // Generate visual score indicator
 const generateScoreIndicator = (score: number): string => {
   const percentage = Math.min(100, Math.max(0, score));
-  const color = percentage >= 75 ? '#4CAF50' : percentage >= 50 ? '#FFAB40' : '#F44336';
+  const color = percentage >= 75 ? '#10B981' : percentage >= 50 ? '#F59E0B' : '#EF4444';
   
   return `
     <div style="position: relative; width: 120px; height: 120px; margin: 20px auto;">
@@ -84,7 +84,7 @@ const generateRoofDiagramSVG = (report: InspectionReport): string => {
   const scaleY = (height - 100) / (maxY - minY || 1);
   const scale = Math.min(scaleX, scaleY);
   
-  const colors = ['#2962FF', '#4CAF50', '#FFAB40', '#9C27B0', '#FF5722', '#00BCD4'];
+  const colors = ['#2563EB', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
   
   return `
     <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="border: 1px solid #E0E0E0; border-radius: 8px; background: #FAFAFA;">
@@ -160,7 +160,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
             justify-content: center;
             align-items: center;
             text-align: center;
-            background: linear-gradient(135deg, #2962FF 0%, #1E88E5 100%);
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
             color: white;
             padding: 2in 0.75in;
           }
@@ -175,7 +175,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
             justify-content: center;
             font-size: 48px;
             font-weight: 900;
-            color: #2962FF;
+            color: #2563EB;
             margin-bottom: 40px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
           }
@@ -224,7 +224,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           
           /* Page Header */
           .page-header {
-            border-bottom: 3px solid #2962FF;
+            border-bottom: 3px solid #2563EB;
             padding-bottom: 15px;
             margin-bottom: 30px;
           }
@@ -232,7 +232,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           .page-header h1 {
             font-size: 24pt;
             font-weight: 700;
-            color: #2962FF;
+            color: #2563EB;
             margin-bottom: 5px;
           }
           
@@ -248,7 +248,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           }
           
           .section-header {
-            background: #2962FF;
+            background: #2563EB;
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
@@ -279,7 +279,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           
           .info-card {
             background: #F5F5F5;
-            border-left: 4px solid #2962FF;
+            border-left: 4px solid #2563EB;
             padding: 15px;
             border-radius: 6px;
           }
@@ -311,13 +311,13 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
             margin: 5px 5px 5px 0;
           }
           
-          .badge-excellent { background: #4CAF50; color: white; }
+          .badge-excellent { background: #10B981; color: white; }
           .badge-good { background: #8BC34A; color: white; }
-          .badge-fair { background: #FFAB40; color: white; }
-          .badge-poor { background: #F44336; color: white; }
-          .badge-detected { background: #F44336; color: white; }
-          .badge-clear { background: #4CAF50; color: white; }
-          .badge-suitable { background: #4CAF50; color: white; }
+          .badge-fair { background: #F59E0B; color: white; }
+          .badge-poor { background: #EF4444; color: white; }
+          .badge-detected { background: #EF4444; color: white; }
+          .badge-clear { background: #10B981; color: white; }
+          .badge-suitable { background: #10B981; color: white; }
           .badge-unsuitable { background: #757575; color: white; }
           
           /* Tables */
@@ -332,7 +332,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           }
           
           .data-table th {
-            background: #2962FF;
+            background: #2563EB;
             color: white;
             padding: 12px;
             text-align: left;
@@ -369,7 +369,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           
           .bullet-list li:before {
             content: "●";
-            color: #2962FF;
+            color: #2563EB;
             font-weight: bold;
             position: absolute;
             left: 0;
@@ -392,7 +392,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           
           .quote-row:last-child {
             border-bottom: none;
-            border-top: 3px solid #2962FF;
+            border-top: 3px solid #2563EB;
             padding-top: 20px;
             margin-top: 15px;
             font-weight: 700;
@@ -410,7 +410,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           }
           
           .quote-total {
-            color: #2962FF;
+            color: #2563EB;
           }
           
           /* Image Grid */
@@ -482,7 +482,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           /* Disclaimer Page */
           .disclaimer-box {
             background: #FFF9E6;
-            border-left: 4px solid #FFAB40;
+            border-left: 4px solid #F59E0B;
             padding: 20px;
             border-radius: 6px;
             margin: 20px 0;
@@ -505,7 +505,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           /* Contractor Info */
           .contact-card {
             background: white;
-            border: 2px solid #2962FF;
+            border: 2px solid #2563EB;
             border-radius: 12px;
             padding: 25px;
             margin: 20px 0;
@@ -514,7 +514,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           .contact-header {
             font-size: 16pt;
             font-weight: 700;
-            color: #2962FF;
+            color: #2563EB;
             margin-bottom: 20px;
           }
           
@@ -578,7 +578,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
             background: #F5F5F5;
             border-radius: 8px;
             padding: 15px;
-            border-left: 4px solid #2962FF;
+            border-left: 4px solid #2563EB;
           }
           
           .facet-name {
@@ -600,7 +600,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
         <div class="page cover-page">
           <div class="cover-logo">🏠</div>
           <h1 class="cover-title">Property Inspection Report</h1>
-          <p class="cover-subtitle">Professional AI-Powered Analysis</p>
+          <p class="cover-subtitle">AI-Powered Property Analysis</p>
           
           <div class="cover-info">
             <div class="cover-info-item">
@@ -939,7 +939,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
           </div>
 
           <div class="section">
-            <div class="quote-box" style="background: linear-gradient(135deg, #2962FF 0%, #1E88E5 100%); color: white;">
+            <div class="quote-box" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: white;">
               <div class="quote-row" style="border-color: rgba(255,255,255,0.3);">
                 <span class="quote-label" style="color: rgba(255,255,255,0.9); font-size: 14pt;">TOTAL PROJECT ESTIMATE</span>
                 <span class="quote-value" style="color: white; font-size: 24pt;">$${report.quote.totalEstimate.toLocaleString()}</span>
@@ -999,10 +999,10 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
 
           <div class="section">
             <div class="contact-card">
-              <div class="contact-header">Professional Inspection Services</div>
+              <div class="contact-header">InspectAI - Professional Inspection Services</div>
               <div class="contact-item">
                 <span class="contact-label">Company:</span>
-                <span class="contact-value">Elite Property Inspections</span>
+                <span class="contact-value">InspectAI Property Inspections</span>
               </div>
               <div class="contact-item">
                 <span class="contact-label">Phone:</span>
@@ -1010,11 +1010,11 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
               </div>
               <div class="contact-item">
                 <span class="contact-label">Email:</span>
-                <span class="contact-value">info@eliteinspections.com</span>
+                <span class="contact-value">info@inspectai.com</span>
               </div>
               <div class="contact-item">
                 <span class="contact-label">Website:</span>
-                <span class="contact-value">www.eliteinspections.com</span>
+                <span class="contact-value">www.inspectai.com</span>
               </div>
               <div class="contact-item">
                 <span class="contact-label">License:</span>
@@ -1067,7 +1067,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
         </div>
 
         <!-- BACK COVER -->
-        <div class="page" style="background: linear-gradient(135deg, #1E88E5 0%, #2962FF 100%); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <div class="page" style="background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
           <div style="max-width: 500px;">
             <h2 style="font-size: 32pt; font-weight: 700; margin-bottom: 20px;">Thank You</h2>
             <p style="font-size: 14pt; opacity: 0.9; line-height: 1.8; margin-bottom: 40px;">
@@ -1077,12 +1077,12 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
             
             <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 12px; padding: 30px; margin-top: 40px;">
               <p style="font-size: 12pt; margin-bottom: 10px;">📞 (555) 123-4567</p>
-              <p style="font-size: 12pt; margin-bottom: 10px;">✉️ info@eliteinspections.com</p>
-              <p style="font-size: 12pt;">🌐 www.eliteinspections.com</p>
+              <p style="font-size: 12pt; margin-bottom: 10px;">✉️ info@inspectai.com</p>
+              <p style="font-size: 12pt;">🌐 www.inspectai.com</p>
             </div>
 
             <p style="font-size: 9pt; opacity: 0.7; margin-top: 40px;">
-              © ${new Date().getFullYear()} Elite Property Inspections. All rights reserved.
+              © ${new Date().getFullYear()} InspectAI. All rights reserved.
             </p>
           </div>
         </div>

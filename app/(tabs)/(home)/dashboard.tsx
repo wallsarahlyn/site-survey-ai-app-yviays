@@ -21,8 +21,8 @@ export default function DashboardScreen() {
       subtitle: 'Upload & analyze photos',
       icon: 'camera.fill',
       iconAndroid: 'photo_camera',
-      color: colors.accent,
-      route: '/(tabs)/(home)/',
+      color: colors.primary,
+      route: '/(tabs)/(home)/inspection',
     },
     {
       id: '2',
@@ -30,7 +30,7 @@ export default function DashboardScreen() {
       subtitle: 'Create measurements',
       icon: 'pencil.and.ruler.fill',
       iconAndroid: 'architecture',
-      color: colors.primary,
+      color: colors.highlight,
       route: '/(tabs)/drawing',
     },
     {
@@ -103,7 +103,7 @@ export default function DashboardScreen() {
 
   const pipelineStages: SalesPipelineStage[] = [
     { id: '1', name: 'Leads', count: 24, value: 180000, color: colors.info },
-    { id: '2', name: 'Qualified', count: 12, value: 95000, color: colors.accent },
+    { id: '2', name: 'Qualified', count: 12, value: 95000, color: colors.primary },
     { id: '3', name: 'Proposal', count: 8, value: 72000, color: colors.warning },
     { id: '4', name: 'Negotiation', count: 4, value: 48000, color: colors.success },
   ];
@@ -120,7 +120,7 @@ export default function DashboardScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return colors.success;
-      case 'in-progress': return colors.accent;
+      case 'in-progress': return colors.primary;
       case 'scheduled': return colors.info;
       case 'pending': return colors.warning;
       default: return colors.textSecondary;
@@ -170,8 +170,8 @@ export default function DashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: colors.text }]}>Welcome back</Text>
-            <Text style={[styles.title, { color: colors.text }]}>TechOps Pro</Text>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>Welcome back</Text>
+            <Text style={[styles.title, { color: colors.text }]}>InspectAI</Text>
           </View>
           <TouchableOpacity 
             style={[styles.profileButton, { backgroundColor: colors.card }]}
@@ -247,8 +247,8 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Inspections</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/(home)/')}>
-              <Text style={[styles.seeAllText, { color: colors.accent }]}>See all</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/(home)/inspection')}>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
             </TouchableOpacity>
           </View>
           {recentInspections.map((inspection) => (
@@ -298,7 +298,7 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Job Queue</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/operations')}>
-              <Text style={[styles.seeAllText, { color: colors.accent }]}>See all</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
             </TouchableOpacity>
           </View>
           {jobQueue.map((job) => (

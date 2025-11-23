@@ -2,17 +2,17 @@
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useColorScheme } from 'react-native';
 
-// TechOps Pro Theme System
+// InspectAI Theme System
 export type ThemeMode = 'light' | 'dark' | 'field';
 
-// Deep Navy & Charcoal with Electric Teal Accents
+// Light theme with clean, professional colors
 const lightTheme = {
   // Backgrounds
   background: '#F8F9FA',
   backgroundSecondary: '#FFFFFF',
   backgroundTertiary: '#E8EAED',
   
-  // Navy & Charcoal
+  // Surfaces
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
@@ -23,20 +23,25 @@ const lightTheme = {
   textTertiary: '#8B95A1',
   textInverse: '#FFFFFF',
   
-  // Primary - Deep Navy
-  primary: '#0F2847',
-  primaryLight: '#1A3A5F',
-  primaryDark: '#081829',
+  // Primary - Professional Blue
+  primary: '#2563EB',
+  primaryLight: '#3B82F6',
+  primaryDark: '#1D4ED8',
   
-  // Secondary - Charcoal
-  secondary: '#2C3E50',
-  secondaryLight: '#34495E',
-  secondaryDark: '#1C2833',
+  // Secondary - Success Green
+  secondary: '#10B981',
+  secondaryLight: '#34D399',
+  secondaryDark: '#059669',
   
-  // Accent - Electric Teal
-  accent: '#00D9FF',
-  accentLight: '#33E1FF',
-  accentDark: '#00B8D9',
+  // Accent - Vibrant Orange
+  accent: '#F59E0B',
+  accentLight: '#FBBF24',
+  accentDark: '#D97706',
+  
+  // Highlight - Purple
+  highlight: '#8B5CF6',
+  highlightLight: '#A78BFA',
+  highlightDark: '#7C3AED',
   
   // Status Colors
   success: '#10B981',
@@ -64,7 +69,7 @@ const darkTheme = {
   backgroundSecondary: '#131920',
   backgroundTertiary: '#1A2332',
   
-  // Navy & Charcoal
+  // Surfaces
   surface: '#131920',
   surfaceElevated: '#1A2332',
   card: '#1A2332',
@@ -75,20 +80,25 @@ const darkTheme = {
   textTertiary: '#718096',
   textInverse: '#0A0E14',
   
-  // Primary - Deep Navy (lighter for dark mode)
-  primary: '#1E4976',
-  primaryLight: '#2A5A8F',
-  primaryDark: '#0F2847',
+  // Primary - Professional Blue (lighter for dark mode)
+  primary: '#3B82F6',
+  primaryLight: '#60A5FA',
+  primaryDark: '#2563EB',
   
-  // Secondary - Charcoal (lighter for dark mode)
-  secondary: '#3D5A73',
-  secondaryLight: '#4A6B87',
-  secondaryDark: '#2C3E50',
+  // Secondary - Success Green
+  secondary: '#10B981',
+  secondaryLight: '#34D399',
+  secondaryDark: '#059669',
   
-  // Accent - Electric Teal
-  accent: '#00D9FF',
-  accentLight: '#33E1FF',
-  accentDark: '#00B8D9',
+  // Accent - Vibrant Orange
+  accent: '#F59E0B',
+  accentLight: '#FBBF24',
+  accentDark: '#D97706',
+  
+  // Highlight - Purple
+  highlight: '#8B5CF6',
+  highlightLight: '#A78BFA',
+  highlightDark: '#7C3AED',
   
   // Status Colors
   success: '#10B981',
@@ -127,20 +137,25 @@ const fieldTheme = {
   textTertiary: '#2C3E50',
   textInverse: '#FFFFFF',
   
-  // Primary - High contrast navy
-  primary: '#0F2847',
-  primaryLight: '#1A3A5F',
-  primaryDark: '#081829',
+  // Primary - High contrast blue
+  primary: '#1D4ED8',
+  primaryLight: '#2563EB',
+  primaryDark: '#1E40AF',
   
-  // Secondary - High contrast charcoal
-  secondary: '#1A2332',
-  secondaryLight: '#2C3E50',
-  secondaryDark: '#0A0E14',
+  // Secondary - High contrast green
+  secondary: '#059669',
+  secondaryLight: '#10B981',
+  secondaryDark: '#047857',
   
-  // Accent - Bright teal for visibility
-  accent: '#00E5FF',
-  accentLight: '#4DFFFF',
-  accentDark: '#00B8D9',
+  // Accent - Bright orange for visibility
+  accent: '#EA580C',
+  accentLight: '#F59E0B',
+  accentDark: '#C2410C',
+  
+  // Highlight - Purple
+  highlight: '#7C3AED',
+  highlightLight: '#8B5CF6',
+  highlightDark: '#6D28D9',
   
   // Status Colors - High visibility
   success: '#059669',
@@ -173,13 +188,14 @@ export const getTheme = (mode: ThemeMode) => {
   }
 };
 
-// Default export for backward compatibility
+// Default export for backward compatibility - now defaults to light theme
 export const colors = lightTheme;
 
 // Hook to get current theme
 export const useTheme = (mode?: ThemeMode) => {
   const systemColorScheme = useColorScheme();
-  const effectiveMode = mode || (systemColorScheme === 'dark' ? 'dark' : 'light');
+  // Default to light theme unless explicitly set to dark
+  const effectiveMode = mode || 'light';
   return getTheme(effectiveMode);
 };
 
