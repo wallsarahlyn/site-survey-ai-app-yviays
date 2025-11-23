@@ -6,20 +6,20 @@ export type ThemeMode = 'light' | 'dark' | 'field';
 // Top Navigation / Footer: Charcoal (#0F0F10)
 // Background: Gunmetal Gray or Soft Black
 // Cards: Dark Gray (#2B2D31) with white text
-// Highlight Elements (AI badges, icons): Teal or Yellow
+// Highlight Elements (AI badges, icons): Contractor Green or Yellow
 // Warnings: Safety Yellow
-// Success: Mint/Teal Green
+// Success: Mint/Contractor Green
 
 export const colors = {
   // Primary colors - Deep Orange for CTAs
   primary: '#FF5722', // Deep Orange
   secondary: '#FF7043', // Lighter Deep Orange
-  accent: '#00BCD4', // Teal for highlights
+  accent: '#00C853', // Contractor Green for highlights
   highlight: '#FFD600', // Yellow for highlights
-  success: '#00E5A0', // Mint/Teal Green
+  success: '#00C853', // Contractor Green
   error: '#FF3B30',
   warning: '#FFD600', // Safety Yellow
-  info: '#00BCD4',
+  info: '#00C853',
   
   // Background colors - Gunmetal Gray / Soft Black
   background: '#1A1A1D', // Soft Black
@@ -44,12 +44,12 @@ export const darkColors = {
   // Primary colors - Deep Orange for CTAs
   primary: '#FF5722', // Deep Orange
   secondary: '#FF7043', // Lighter Deep Orange
-  accent: '#00BCD4', // Teal for highlights
+  accent: '#00C853', // Contractor Green for highlights
   highlight: '#FFD600', // Yellow for highlights
-  success: '#00E5A0', // Mint/Teal Green
+  success: '#00C853', // Contractor Green
   error: '#FF3B30',
   warning: '#FFD600', // Safety Yellow
-  info: '#00BCD4',
+  info: '#00C853',
   
   // Background colors - Gunmetal Gray / Soft Black
   background: '#1A1A1D', // Soft Black
@@ -74,12 +74,12 @@ export const fieldColors = {
   // Primary colors - High contrast for outdoor visibility
   primary: '#FF5722', // Deep Orange
   secondary: '#FF7043', // Lighter Deep Orange
-  accent: '#00BCD4', // Teal for highlights
+  accent: '#00C853', // Contractor Green for highlights
   highlight: '#FFD600', // Yellow for highlights (high visibility)
-  success: '#00E5A0', // Mint/Teal Green
+  success: '#00C853', // Contractor Green
   error: '#FF1744',
   warning: '#FFD600', // Safety Yellow (high visibility)
-  info: '#00BCD4',
+  info: '#00C853',
   
   // Background colors - Slightly lighter for outdoor visibility
   background: '#2A2A2D', // Lighter gunmetal for better visibility
