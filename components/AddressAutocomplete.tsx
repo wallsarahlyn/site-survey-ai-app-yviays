@@ -1,13 +1,27 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { View, TextInput, StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator, TextInputProps } from 'react-native';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { IconSymbol } from './IconSymbol';
 
+interface AddressComponents {
+  formattedAddress: string;
+  latitude: number;
+  longitude: number;
+  streetNumber?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+}
+
 interface AddressAutocompleteProps {
   value: string;
-  onAddressSelect: (address: string) => void;
+  onChangeText?: (text: string) => void;
+  onAddressSelect: (addressComponents: AddressComponents) => void;
   placeholder?: string;
+  multiline?: boolean;
 }
 
 interface AddressSuggestion {
@@ -15,10 +29,12 @@ interface AddressSuggestion {
   place_id: string;
 }
 
-export default function AddressAutocomplete({ 
+export function AddressAutocomplete({ 
   value, 
+  onChangeText,
   onAddressSelect, 
-  placeholder = 'Enter address' 
+  placeholder = 'Enter address',
+  multiline = false,
 }: AddressAutocompleteProps) {
   const { colors } = useThemeContext();
   const [inputValue, setInputValue] = useState(value);
@@ -60,15 +76,38 @@ export default function AddressAutocomplete({
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
     setInputValue(suggestion.description);
-    onAddressSelect(suggestion.description);
+    
+    // Mock address components - in production, this would come from Google Places Details API
+    const mockAddressComponents: AddressComponents = {
+      formattedAddress: suggestion.description,
+      latitude: 37.7749, // Mock coordinates
+      longitude: -122.4194,
+      city: 'San Francisco',
+      state: 'CA',
+      zipCode: '94102',
+      country: 'USA',
+    };
+    
+    onAddressSelect(mockAddressComponents);
+    if (onChangeText) {
+      onChangeText(suggestion.description);
+    }
     setShowSuggestions(false);
     setSuggestions([]);
   };
 
   const handleChangeText = (text: string) => {
     setInputValue(text);
+    if (onChangeText) {
+      onChangeText(text);
+    }
     if (text.length === 0) {
-      onAddressSelect('');
+      const emptyAddress: AddressComponents = {
+        formattedAddress: '',
+        latitude: 0,
+        longitude: 0,
+      };
+      onAddressSelect(emptyAddress);
     }
   };
 
@@ -98,6 +137,8 @@ export default function AddressAutocomplete({
           onBlur={handleBlur}
           autoCapitalize="words"
           autoCorrect={false}
+          multiline={multiline}
+          numberOfLines={multiline ? 3 : 1}
         />
         {isLoading && <ActivityIndicator size="small" color={colors.primary} />}
       </View>
@@ -139,16 +180,17 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
+    minHeight: 50,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 16,
+    paddingVertical: 8,
     gap: 12,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    height: '100%',
+    minHeight: 40,
   },
   suggestionsContainer: {
     position: 'absolute',

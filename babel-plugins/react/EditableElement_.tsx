@@ -1,3 +1,4 @@
+
 /* eslint-disable */
 
 // @eslint-ignore-file
@@ -6,12 +7,12 @@ import { cloneElement, PropsWithChildren, useContext } from "react";
 import { EditableContext } from "./withEditableWrapper_";
 import { Platform } from "react-native";
 
-export type ElementTypes = "Text" | "View";
+export type ElementTypes = "Text" | "View" | "Icon" | "TouchableOpacity";
 
 const isPrimitive = (item: any) => {
   if (Array.isArray(item)) return item.every((el) => isPrimitive(el));
   if (typeof item === "object")
-    Object.values(item).every((el) => isPrimitive(el));
+    return Object.values(item).every((el) => isPrimitive(el));
   if (typeof item === "string") return true;
   if (typeof item === "number") return true;
 
@@ -28,23 +29,32 @@ export const getType = (el: any): ElementTypes | undefined => {
   return undefined;
 };
 
-const toArray = (object: T | T[]): T[] => {
+const toArray = <T,>(object: T | T[]): T[] => {
   if (Array.isArray(object)) return object;
   return [object];
 };
 
 export default function EditableElement_(_props: PropsWithChildren<any>) {
+  const context = useContext(EditableContext);
+  
+  // Provide default values if context is undefined
   const {
-    editModeEnabled,
-    selected,
-    onElementClick,
-    attributes: overwrittenProps,
-    hovered,
-    pushHovered,
-    popHovered,
-  } = useContext(EditableContext);
+    editModeEnabled = false,
+    selected = undefined,
+    onElementClick = () => {},
+    attributes: overwrittenProps = {},
+    hovered = undefined,
+    pushHovered = () => {},
+    popHovered = () => {},
+  } = context || {};
 
   const { children } = _props;
+  
+  // Safety check for children
+  if (!children || !children.props) {
+    return children;
+  }
+  
   const { props } = children;
 
   // If we are not running in the web the windows will causes
@@ -56,6 +66,12 @@ export default function EditableElement_(_props: PropsWithChildren<any>) {
   const type = getType(children);
   const __sourceLocation = props.__sourceLocation;
   const __trace = props.__trace;
+  
+  // Safety check for __trace
+  if (!__trace || !Array.isArray(__trace)) {
+    return cloneElement(children, props);
+  }
+  
   const id = __trace.join("");
   const attributes = overwrittenProps[id] ?? {};
 
@@ -88,8 +104,8 @@ export default function EditableElement_(_props: PropsWithChildren<any>) {
   const editProps = {
     onMouseOver: () => pushHovered(id),
     onMouseLeave: () => popHovered(id),
-    onClick: (ev) => onClick(ev),
-    onPress: (ev) => onClick(ev),
+    onClick: (ev: any) => onClick(ev),
+    onPress: (ev: any) => onClick(ev),
   };
 
   if (type === "Text") {
@@ -135,4 +151,7 @@ export default function EditableElement_(_props: PropsWithChildren<any>) {
       children: children.props.children,
     });
   }
+
+  // Default case: return children as-is
+  return children;
 }

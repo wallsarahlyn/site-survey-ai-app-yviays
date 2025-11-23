@@ -21,7 +21,7 @@ import { InspectionReport } from '@/types/inspection';
 import ImageUploader from '@/components/ImageUploader';
 import AnalysisResults from '@/components/AnalysisResults';
 import QuoteDisplay from '@/components/QuoteDisplay';
-import AddressAutocomplete from '@/components/AddressAutocomplete';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { IconSymbol } from '@/components/IconSymbol';
 import { supabase } from '@/app/integrations/supabase/client';
 
@@ -258,7 +258,11 @@ export default function InspectionScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
           <AddressAutocomplete
             value={propertyAddress}
-            onAddressSelect={setPropertyAddress}
+            onChangeText={setPropertyAddress}
+            onAddressSelect={(addressComponents) => {
+              console.log('Address selected:', addressComponents);
+              setPropertyAddress(addressComponents.formattedAddress);
+            }}
             placeholder="Enter property address"
           />
         </View>
