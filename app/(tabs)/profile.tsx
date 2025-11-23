@@ -24,11 +24,13 @@ export default function ProfileScreen() {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session ? 'Found' : 'None');
       setSession(session);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('Auth state changed:', _event, session ? 'Session exists' : 'No session');
       setSession(session);
     });
 
@@ -49,13 +51,48 @@ export default function ProfileScreen() {
       });
 
       if (error) {
-        Alert.alert('Sign In Error', error.message);
+        console.error('Sign in error:', error);
+        
+        // Handle specific error cases
+        if (error.message.includes('Email not confirmed')) {
+          Alert.alert(
+            'Email Not Verified',
+            'Please check your email and click the verification link before signing in. Check your spam folder if you don\'t see it.',
+            [
+              { text: 'OK' },
+              {
+                text: 'Resend Email',
+                onPress: async () => {
+                  const { error: resendError } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: email,
+                    options: {
+                      emailRedirectTo: 'https://natively.dev/email-confirmed'
+                    }
+                  });
+                  
+                  if (resendError) {
+                    Alert.alert('Error', 'Failed to resend verification email. Please try again.');
+                  } else {
+                    Alert.alert('Success', 'Verification email sent! Please check your inbox.');
+                  }
+                }
+              }
+            ]
+          );
+        } else if (error.message.includes('Invalid login credentials')) {
+          Alert.alert('Sign In Error', 'Invalid email or password. Please try again.');
+        } else {
+          Alert.alert('Sign In Error', error.message);
+        }
       } else {
+        console.log('Sign in successful');
         Alert.alert('Success', 'Signed in successfully!');
         setEmail('');
         setPassword('');
       }
     } catch (error) {
+      console.error('Unexpected error during sign in:', error);
       Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -84,18 +121,33 @@ export default function ProfileScreen() {
       });
 
       if (error) {
-        Alert.alert('Sign Up Error', error.message);
+        console.error('Sign up error:', error);
+        
+        // Handle specific error cases
+        if (error.message.includes('User already registered')) {
+          Alert.alert(
+            'Account Exists',
+            'An account with this email already exists. Please sign in instead or use the password reset option if you forgot your password.'
+          );
+        } else {
+          Alert.alert('Sign Up Error', error.message);
+        }
       } else {
+        console.log('Sign up successful, user needs to verify email');
         Alert.alert(
-          'Success',
-          'Account created! Please check your email to verify your account before signing in.',
-          [{ text: 'OK' }]
+          'Verification Email Sent! 📧',
+          `We've sent a verification link to ${email}.\n\nPlease check your email (including spam folder) and click the link to verify your account before signing in.\n\nThe link will expire in 24 hours.`,
+          [
+            { text: 'OK', onPress: () => {
+              setEmail('');
+              setPassword('');
+              setIsSignUp(false);
+            }}
+          ]
         );
-        setEmail('');
-        setPassword('');
-        setIsSignUp(false);
       }
     } catch (error) {
+      console.error('Unexpected error during sign up:', error);
       Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -107,11 +159,43 @@ export default function ProfileScreen() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
+        console.error('Sign out error:', error);
         Alert.alert('Error', error.message);
       } else {
+        console.log('Sign out successful');
         Alert.alert('Success', 'Signed out successfully!');
       }
     } catch (error) {
+      console.error('Unexpected error during sign out:', error);
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert('Enter Email', 'Please enter your email address first');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://natively.dev/email-confirmed',
+      });
+
+      if (error) {
+        console.error('Password reset error:', error);
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert(
+          'Password Reset Email Sent',
+          'Check your email for a password reset link.'
+        );
+      }
+    } catch (error) {
+      console.error('Unexpected error during password reset:', error);
       Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -146,6 +230,7 @@ export default function ProfileScreen() {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
+              editable={!loading}
             />
 
             <TextInput
@@ -154,11 +239,12 @@ export default function ProfileScreen() {
                 color: colors.text,
                 borderColor: colors.border 
               }]}
-              placeholder="Password"
+              placeholder="Password (min 6 characters)"
               placeholderTextColor={colors.textSecondary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              editable={!loading}
             />
 
             <TouchableOpacity
@@ -175,9 +261,22 @@ export default function ProfileScreen() {
               )}
             </TouchableOpacity>
 
+            {!isSignUp && (
+              <TouchableOpacity
+                style={styles.forgotPasswordButton}
+                onPress={handleForgotPassword}
+                disabled={loading}
+              >
+                <Text style={[styles.forgotPasswordText, { color: colors.textSecondary }]}>
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               style={styles.switchButton}
               onPress={() => setIsSignUp(!isSignUp)}
+              disabled={loading}
             >
               <Text style={[styles.switchButtonText, { color: colors.primary }]}>
                 {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
@@ -188,6 +287,11 @@ export default function ProfileScreen() {
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                 ℹ️ Authentication is required to use AI analysis and historical data features.
               </Text>
+              {isSignUp && (
+                <Text style={[styles.infoText, { color: colors.textSecondary, marginTop: 8 }]}>
+                  📧 You&apos;ll need to verify your email before you can sign in.
+                </Text>
+              )}
             </View>
           </View>
         ) : (
@@ -202,6 +306,13 @@ export default function ProfileScreen() {
             <View style={styles.infoRow}>
               <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Status:</Text>
               <Text style={[styles.infoValue, { color: '#10B981' }]}>✓ Signed In</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>User ID:</Text>
+              <Text style={[styles.infoValue, { color: colors.textSecondary, fontSize: 12 }]}>
+                {session.user.id.substring(0, 8)}...
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -341,6 +452,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
+  },
+  forgotPasswordButton: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    fontSize: 14,
   },
   switchButton: {
     marginTop: 16,
