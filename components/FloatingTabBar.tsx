@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,8 +21,6 @@ import Animated, {
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Href } from 'expo-router';
 
-const { width: screenWidth } = Dimensions.get('window');
-
 export interface TabBarItem {
   name: string;
   route: Href;
@@ -33,45 +30,32 @@ export interface TabBarItem {
 
 interface FloatingTabBarProps {
   tabs: TabBarItem[];
-  containerWidth?: number;
-  borderRadius?: number;
-  bottomMargin?: number;
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 }
 
 export default function FloatingTabBar({
   tabs,
-  containerWidth = screenWidth * 0.92, // Wider for better spacing
-  borderRadius = 28,
-  bottomMargin
+  position = 'bottom-right'
 }: FloatingTabBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const theme = useTheme();
   const animatedValue = useSharedValue(0);
 
-  // Improved active tab detection with better path matching
   const activeTabIndex = React.useMemo(() => {
-    // Find the best matching tab based on the current pathname
     let bestMatch = -1;
     let bestMatchScore = 0;
 
     tabs.forEach((tab, index) => {
       let score = 0;
 
-      // Exact route match gets highest score
       if (pathname === tab.route) {
         score = 100;
-      }
-      // Check if pathname starts with tab route (for nested routes)
-      else if (pathname.startsWith(tab.route as string)) {
+      } else if (pathname.startsWith(tab.route as string)) {
         score = 80;
-      }
-      // Check if pathname contains the tab name
-      else if (pathname.includes(tab.name)) {
+      } else if (pathname.includes(tab.name)) {
         score = 60;
-      }
-      // Check for partial matches in the route
-      else if (tab.route.includes('/(tabs)/') && pathname.includes(tab.route.split('/(tabs)/')[1])) {
+      } else if (tab.route.includes('/(tabs)/') && pathname.includes(tab.route.split('/(tabs)/')[1])) {
         score = 40;
       }
 
@@ -81,7 +65,6 @@ export default function FloatingTabBar({
       }
     });
 
-    // Default to first tab if no match found
     return bestMatch >= 0 ? bestMatch : 0;
   }, [pathname, tabs]);
 
@@ -99,24 +82,41 @@ export default function FloatingTabBar({
     router.push(route);
   };
 
-  const tabWidthPercent = ((100 / tabs.length) - 2).toFixed(2);
-
   const indicatorStyle = useAnimatedStyle(() => {
-    const tabWidth = (containerWidth - 16) / tabs.length; // Account for container padding
+    const tabHeight = 60;
     return {
       transform: [
         {
-          translateX: interpolate(
+          translateY: interpolate(
             animatedValue.value,
             [0, tabs.length - 1],
-            [0, tabWidth * (tabs.length - 1)]
+            [0, tabHeight * (tabs.length - 1)]
           ),
         },
       ],
     };
   });
 
-  // Dynamic styles based on theme
+  const getPositionStyles = () => {
+    const baseStyles = {
+      position: 'absolute' as const,
+      zIndex: 1000,
+    };
+
+    switch (position) {
+      case 'bottom-right':
+        return { ...baseStyles, bottom: 16, right: 16 };
+      case 'bottom-left':
+        return { ...baseStyles, bottom: 16, left: 16 };
+      case 'top-right':
+        return { ...baseStyles, top: Platform.OS === 'android' ? 64 : 60, right: 16 };
+      case 'top-left':
+        return { ...baseStyles, top: Platform.OS === 'android' ? 64 : 60, left: 16 };
+      default:
+        return { ...baseStyles, bottom: 16, right: 16 };
+    }
+  };
+
   const dynamicStyles = {
     blurContainer: {
       ...styles.blurContainer,
@@ -151,31 +151,23 @@ export default function FloatingTabBar({
       backgroundColor: theme.dark
         ? 'rgba(255, 87, 34, 0.15)'
         : 'rgba(255, 87, 34, 0.1)',
-      width: `${tabWidthPercent}%` as `${number}%`,
     },
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-      <View style={[
-        styles.container,
-        {
-          width: containerWidth,
-          marginBottom: bottomMargin ?? 16
-        }
-      ]}>
-        <BlurView
-          intensity={Platform.OS === 'ios' ? 80 : 0}
-          style={[dynamicStyles.blurContainer, { borderRadius }]}
-        >
-          <View style={dynamicStyles.background} />
-          <Animated.View style={[dynamicStyles.indicator, indicatorStyle]} />
-          <View style={styles.tabsContainer}>
-            {tabs.map((tab, index) => {
-              const isActive = activeTabIndex === index;
+    <View style={[styles.container, getPositionStyles()]}>
+      <BlurView
+        intensity={Platform.OS === 'ios' ? 80 : 0}
+        style={[dynamicStyles.blurContainer]}
+      >
+        <View style={dynamicStyles.background} />
+        <Animated.View style={[dynamicStyles.indicator, indicatorStyle]} />
+        <View style={styles.tabsContainer}>
+          {tabs.map((tab, index) => {
+            const isActive = activeTabIndex === index;
 
-              return (
-                <React.Fragment key={index}>
+            return (
+              <React.Fragment key={index}>
                 <TouchableOpacity
                   style={styles.tab}
                   onPress={() => handleTabPress(tab.route)}
@@ -185,7 +177,7 @@ export default function FloatingTabBar({
                     <IconSymbol
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
-                      size={26}
+                      size={24}
                       color={isActive ? '#FF5722' : (theme.dark ? '#94A3B8' : '#64748B')}
                     />
                     <Text
@@ -199,31 +191,22 @@ export default function FloatingTabBar({
                     </Text>
                   </View>
                 </TouchableOpacity>
-                </React.Fragment>
-              );
-            })}
-          </View>
-        </BlurView>
-      </View>
-    </SafeAreaView>
+              </React.Fragment>
+            );
+          })}
+        </View>
+      </BlurView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    alignItems: 'center',
-  },
   container: {
-    marginHorizontal: 16,
-    alignSelf: 'center',
+    width: 80,
   },
   blurContainer: {
     overflow: 'hidden',
+    borderRadius: 20,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -244,34 +227,33 @@ const styles = StyleSheet.create({
   },
   indicator: {
     position: 'absolute',
-    top: 6,
-    left: 8,
-    bottom: 6,
-    borderRadius: 22,
+    top: 4,
+    left: 4,
+    right: 4,
+    height: 60,
+    borderRadius: 16,
   },
   tabsContainer: {
-    flexDirection: 'row',
-    height: 68,
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    gap: 4, // Add gap between tabs for better spacing
+    paddingVertical: 4,
+    paddingHorizontal: 4,
   },
   tab: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    height: 60,
   },
   tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 2,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
     marginTop: 2,
     letterSpacing: 0.2,
+    textAlign: 'center',
   },
 });

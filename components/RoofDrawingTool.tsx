@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ScrollView, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ScrollView, Dimensions, Platform } from 'react-native';
 import Svg, { Polygon, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { RoofFacet, RoofDiagram } from '@/types/inspection';
@@ -16,7 +16,7 @@ interface RoofDrawingToolProps {
 
 const CANVAS_WIDTH = Dimensions.get('window').width - 32;
 const CANVAS_HEIGHT = 400;
-const PIXELS_PER_FOOT = 10; // Scale: 10 pixels = 1 foot
+const PIXELS_PER_FOOT = 10;
 
 export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddress }: RoofDrawingToolProps) {
   const [facets, setFacets] = useState<RoofFacet[]>(initialDiagram?.facets || []);
@@ -26,6 +26,10 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
   const [facetLabel, setFacetLabel] = useState('');
   const [facetPitch, setFacetPitch] = useState('6');
   const [propertyAddress, setPropertyAddress] = useState(initialAddress || '');
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [mapCenter, setMapCenter] = useState({ lat: 37.7749, lng: -122.4194 });
+  const [mapZoom, setMapZoom] = useState(19);
 
   const calculateArea = (points: { x: number; y: number }[]): number => {
     if (points.length < 3) return 0;
@@ -66,6 +70,57 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
       height: (maxY - minY) / PIXELS_PER_FOOT,
       perimeter: perimeter / PIXELS_PER_FOOT,
     };
+  };
+
+  const handleAddressChange = async (text: string) => {
+    setPropertyAddress(text);
+    
+    if (text.length > 3) {
+      try {
+        console.log('Fetching address suggestions for:', text);
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=YOUR_GOOGLE_API_KEY`
+        );
+        const data = await response.json();
+        
+        if (data.predictions && data.predictions.length > 0) {
+          const suggestions = data.predictions.map((p: any) => p.description);
+          setAddressSuggestions(suggestions);
+          setShowSuggestions(true);
+        } else {
+          setAddressSuggestions([]);
+          setShowSuggestions(false);
+        }
+      } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+        setAddressSuggestions([]);
+        setShowSuggestions(false);
+      }
+    } else {
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectAddress = async (address: string) => {
+    setPropertyAddress(address);
+    setShowSuggestions(false);
+    
+    try {
+      console.log('Geocoding address:', address);
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=YOUR_GOOGLE_API_KEY`
+      );
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        const location = data.results[0].geometry.location;
+        setMapCenter({ lat: location.lat, lng: location.lng });
+        console.log('Map centered at:', location);
+      }
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+    }
   };
 
   const handleCanvasPress = (event: any) => {
@@ -180,7 +235,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
     const totalPerimeter = facets.reduce((sum, facet) => sum + facet.measurements.perimeter, 0);
     const avgPitch = facets.reduce((sum, facet) => sum + facet.pitch, 0) / facets.length;
 
-    // Generate roof diagram SVG
     const generateRoofDiagramSVG = () => {
       let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
       facets.forEach(facet => {
@@ -260,7 +314,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               page-break-after: auto;
             }
             
-            /* Cover Page */
             .cover-page {
               display: flex;
               flex-direction: column;
@@ -329,7 +382,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               font-weight: 600;
             }
             
-            /* Page Header */
             .page-header {
               border-bottom: 3px solid #2563EB;
               padding-bottom: 15px;
@@ -348,7 +400,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               color: #757575;
             }
             
-            /* Section Styles */
             .section {
               margin-bottom: 35px;
               page-break-inside: avoid;
@@ -376,7 +427,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               border-bottom: 2px solid #E0E0E0;
             }
             
-            /* Info Grid */
             .info-grid {
               display: grid;
               grid-template-columns: repeat(2, 1fr);
@@ -406,7 +456,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               font-weight: 700;
             }
             
-            /* Tables */
             .data-table {
               width: 100%;
               border-collapse: collapse;
@@ -445,13 +494,11 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               font-weight: 700;
             }
             
-            /* Diagram Container */
             .diagram-container {
               text-align: center;
               margin: 20px 0;
             }
             
-            /* Summary Box */
             .summary-box {
               background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
               color: white;
@@ -478,7 +525,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               opacity: 0.8;
             }
             
-            /* Footer */
             .page-footer {
               position: absolute;
               bottom: 0.5in;
@@ -492,7 +538,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               justify-content: space-between;
             }
             
-            /* Highlight Box */
             .highlight-box {
               background: #FFF9E6;
               border-left: 4px solid #F59E0B;
@@ -514,7 +559,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               line-height: 1.6;
             }
             
-            /* Bullet List */
             .bullet-list {
               margin: 15px 0;
               padding-left: 0;
@@ -537,7 +581,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
           </style>
         </head>
         <body>
-          <!-- COVER PAGE -->
           <div class="page cover-page">
             <div class="cover-logo">🏠</div>
             <h1 class="cover-title">Roof Measurement Report</h1>
@@ -567,7 +610,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
             </div>
           </div>
 
-          <!-- EXECUTIVE SUMMARY PAGE -->
           <div class="page">
             <div class="page-header">
               <h1>Executive Summary</h1>
@@ -625,7 +667,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
             </div>
           </div>
 
-          <!-- ROOF DIAGRAM PAGE -->
           <div class="page">
             <div class="page-header">
               <h1>Roof Diagram</h1>
@@ -655,7 +696,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
             </div>
           </div>
 
-          <!-- DETAILED MEASUREMENTS PAGE -->
           <div class="page">
             <div class="page-header">
               <h1>Detailed Facet Measurements</h1>
@@ -721,7 +761,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
             </div>
           </div>
 
-          <!-- MATERIAL ESTIMATION PAGE -->
           <div class="page">
             <div class="page-header">
               <h1>Material Estimation Guide</h1>
@@ -805,7 +844,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
             </div>
           </div>
 
-          <!-- BACK COVER -->
           <div class="page" style="background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
             <div style="max-width: 500px;">
               <h2 style="font-size: 32pt; font-weight: 700; margin-bottom: 20px;">InspectAI</h2>
@@ -858,7 +896,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
       <View style={styles.header}>
         <Text style={styles.title}>Roof Drawing Tool</Text>
         <Text style={styles.subtitle}>
-          Tap on the canvas to place points and create roof facets from advanced aerial imagery
+          Draw roof facets over satellite imagery. Note: Google Maps integration requires a valid API key.
         </Text>
       </View>
 
@@ -873,15 +911,40 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
           placeholder="Enter property address (e.g., 123 Main St, City, State ZIP)"
           placeholderTextColor={colors.textSecondary}
           value={propertyAddress}
-          onChangeText={setPropertyAddress}
+          onChangeText={handleAddressChange}
           multiline
         />
+        {showSuggestions && addressSuggestions.length > 0 && (
+          <View style={[styles.suggestionsContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            {addressSuggestions.map((suggestion, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.suggestionItem, { borderBottomColor: colors.border }]}
+                onPress={() => selectAddress(suggestion)}
+              >
+                <Text style={[styles.suggestionText, { color: colors.text }]}>{suggestion}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+        <View style={styles.warningBox}>
+          <IconSymbol ios_icon_name="exclamationmark.triangle.fill" android_material_icon_name="warning" size={20} color="#F59E0B" />
+          <Text style={styles.warningText}>
+            Google Maps API integration is not fully configured. To enable satellite imagery and address autocomplete, you need to:
+          </Text>
+        </View>
+        <View style={styles.instructionsList}>
+          <Text style={styles.instructionText}>1. Get a Google Maps API key from Google Cloud Console</Text>
+          <Text style={styles.instructionText}>2. Enable Maps JavaScript API and Places API</Text>
+          <Text style={styles.instructionText}>3. Replace YOUR_GOOGLE_API_KEY in the code with your actual key</Text>
+          <Text style={styles.instructionText}>4. For web: Add the API key to your HTML or use a Maps library</Text>
+          <Text style={styles.instructionText}>5. For native: Configure react-native-maps (not supported in Natively)</Text>
+        </View>
       </View>
 
       <View style={styles.canvasContainer}>
         <View style={styles.canvas} onTouchEnd={handleCanvasPress}>
           <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
-            {/* Grid lines */}
             {Array.from({ length: Math.floor(CANVAS_WIDTH / 50) }).map((_, i) => (
               <Line
                 key={`v-${i}`}
@@ -907,7 +970,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               />
             ))}
 
-            {/* Completed facets */}
             {facets.map((facet) => {
               const points = facet.points.map(p => `${p.x},${p.y}`).join(' ');
               const isSelected = facet.id === selectedFacetId;
@@ -934,7 +996,6 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
               );
             })}
 
-            {/* Current drawing */}
             {currentPoints.length > 0 && (
               <>
                 {currentPoints.length > 2 && (
@@ -967,7 +1028,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
         </View>
 
         <View style={styles.legend}>
-          <Text style={styles.legendText}>Scale: 1 grid square = 5 feet (from aerial imagery)</Text>
+          <Text style={styles.legendText}>Scale: 1 grid square = 5 feet | Satellite imagery requires Google Maps API</Text>
         </View>
       </View>
 
@@ -1042,7 +1103,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddr
           <View style={styles.summaryCard}>
             <Text style={styles.summaryTitle}>Total Roof Area</Text>
             <Text style={styles.summaryValue}>{totalArea.toFixed(2)} sq ft</Text>
-            <Text style={styles.summarySubtitle}>From Advanced Aerial Imagery</Text>
+            <Text style={styles.summarySubtitle}>From Manual Measurements</Text>
           </View>
 
           <Text style={styles.facetsTitle}>Facets ({facets.length})</Text>
@@ -1105,6 +1166,44 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 14,
     textAlignVertical: 'top',
+  },
+  suggestionsContainer: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    maxHeight: 200,
+  },
+  suggestionItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+  },
+  suggestionText: {
+    fontSize: 14,
+  },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF9E6',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 12,
+    gap: 8,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#92400E',
+    lineHeight: 18,
+  },
+  instructionsList: {
+    marginTop: 8,
+    paddingLeft: 8,
+  },
+  instructionText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 4,
+    lineHeight: 18,
   },
   canvasContainer: {
     backgroundColor: colors.card,
