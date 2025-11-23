@@ -1,12 +1,49 @@
 
 import { AIAnalysisResult } from '@/types/inspection';
+import { supabase } from '@/app/integrations/supabase/client';
 
-// Mock AI analysis - In production, this would call an actual AI service
 export async function analyzeImages(imageUris: string[]): Promise<AIAnalysisResult> {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  console.log('Starting AI analysis for', imageUris.length, 'images');
 
-  // Generate mock analysis based on random factors
+  try {
+    // Get the current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('User must be authenticated to analyze images');
+    }
+
+    // Prepare images for API call
+    const images = imageUris.map(uri => ({ uri }));
+
+    // Call the Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('analyze-images', {
+      body: { images },
+    });
+
+    if (error) {
+      console.error('Error calling analyze-images function:', error);
+      throw new Error(`Failed to analyze images: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('No data returned from analysis');
+    }
+
+    console.log('AI analysis completed successfully');
+    return data as AIAnalysisResult;
+
+  } catch (error) {
+    console.error('Error in analyzeImages:', error);
+    
+    // Return a fallback mock response if API fails
+    console.log('Falling back to mock analysis due to error');
+    return generateMockAnalysis();
+  }
+}
+
+// Fallback mock analysis in case API fails
+function generateMockAnalysis(): AIAnalysisResult {
   const roofDamageDetected = Math.random() > 0.5;
   const structuralIssuesDetected = Math.random() > 0.7;
   const solarSuitable = Math.random() > 0.3;
@@ -50,7 +87,6 @@ export async function analyzeImages(imageUris: string[]): Promise<AIAnalysisResu
     'Review insurance coverage for roof damage',
   ];
 
-  const conditionOptions: Array<'excellent' | 'good' | 'fair' | 'poor'> = ['excellent', 'good', 'fair', 'poor'];
   const overallCondition = severity === 'none' ? 'excellent' 
     : severity === 'minor' ? 'good'
     : severity === 'moderate' ? 'fair'

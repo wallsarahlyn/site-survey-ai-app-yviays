@@ -1,445 +1,399 @@
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
-import { IconSymbol } from '@/components/IconSymbol';
-import { useThemeContext } from '@/contexts/ThemeContext';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/app/integrations/supabase/client';
 
 export default function ProfileScreen() {
-  const { colors, mode, setMode } = useThemeContext();
-  const router = useRouter();
+  const { colors, theme, setTheme } = useTheme();
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
 
-  const settingsSections = [
-    {
-      title: 'Appearance',
-      items: [
-        {
-          id: 'theme',
-          label: 'Theme Mode',
-          icon: 'paintbrush.fill',
-          iconAndroid: 'palette',
-          type: 'select' as const,
-          value: mode,
-          options: [
-            { label: 'Light Mode', value: 'light' },
-            { label: 'Dark Mode', value: 'dark' },
-            { label: 'Field Mode (High Visibility)', value: 'field' },
-          ],
-        },
-      ],
-    },
-    {
-      title: 'Account',
-      items: [
-        {
-          id: 'profile',
-          label: 'Profile Settings',
-          icon: 'person.circle.fill',
-          iconAndroid: 'account_circle',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'team',
-          label: 'Team Management',
-          icon: 'person.2.fill',
-          iconAndroid: 'people',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'permissions',
-          label: 'Permissions',
-          icon: 'lock.fill',
-          iconAndroid: 'lock',
-          type: 'navigation' as const,
-        },
-      ],
-    },
-    {
-      title: 'Business',
-      items: [
-        {
-          id: 'branding',
-          label: 'Branding Settings',
-          icon: 'paintpalette.fill',
-          iconAndroid: 'color_lens',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'measurements',
-          label: 'Measurement Settings',
-          icon: 'ruler.fill',
-          iconAndroid: 'straighten',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'subscription',
-          label: 'Subscription',
-          icon: 'creditcard.fill',
-          iconAndroid: 'credit_card',
-          type: 'navigation' as const,
-        },
-      ],
-    },
-    {
-      title: 'Data',
-      items: [
-        {
-          id: 'storage',
-          label: 'Cloud Storage',
-          icon: 'icloud.fill',
-          iconAndroid: 'cloud',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'export',
-          label: 'Export Data',
-          icon: 'square.and.arrow.up.fill',
-          iconAndroid: 'upload',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'backup',
-          label: 'Backup & Restore',
-          icon: 'arrow.clockwise.circle.fill',
-          iconAndroid: 'backup',
-          type: 'navigation' as const,
-        },
-      ],
-    },
-    {
-      title: 'Support',
-      items: [
-        {
-          id: 'help',
-          label: 'Help Center',
-          icon: 'questionmark.circle.fill',
-          iconAndroid: 'help',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'contact',
-          label: 'Contact Support',
-          icon: 'envelope.fill',
-          iconAndroid: 'email',
-          type: 'navigation' as const,
-        },
-        {
-          id: 'about',
-          label: 'About InspectAI',
-          icon: 'info.circle.fill',
-          iconAndroid: 'info',
-          type: 'navigation' as const,
-        },
-      ],
-    },
-  ];
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
-  const handleThemeChange = () => {
-    Alert.alert(
-      'Select Theme',
-      'Choose your preferred theme mode',
-      [
-        {
-          text: 'Light Mode',
-          onPress: () => setMode('light'),
-        },
-        {
-          text: 'Dark Mode',
-          onPress: () => setMode('dark'),
-        },
-        {
-          text: 'Field Mode',
-          onPress: () => setMode('field'),
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ]
-    );
-  };
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
-  const getThemeLabel = () => {
-    switch (mode) {
-      case 'light': return 'Light Mode';
-      case 'dark': return 'Dark Mode';
-      case 'field': return 'Field Mode';
-      default: return 'Light Mode';
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        Alert.alert('Sign In Error', error.message);
+      } else {
+        Alert.alert('Success', 'Signed in successfully!');
+        setEmail('');
+        setPassword('');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const styles = createStyles(colors);
+  const handleSignUp = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: 'https://natively.dev/email-confirmed'
+        }
+      });
+
+      if (error) {
+        Alert.alert('Sign Up Error', error.message);
+      } else {
+        Alert.alert(
+          'Success',
+          'Account created! Please check your email to verify your account before signing in.',
+          [{ text: 'OK' }]
+        );
+        setEmail('');
+        setPassword('');
+        setIsSignUp(false);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Success', 'Signed out successfully!');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
         <View style={styles.header}>
-          <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
-            <Text style={styles.avatarText}>IA</Text>
-          </View>
-          <Text style={[styles.name, { color: colors.text }]}>InspectAI</Text>
-          <Text style={[styles.email, { color: colors.textSecondary }]}>
-            admin@inspectai.com
+          <Text style={[styles.title, { color: colors.text }]}>Profile & Settings</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Manage your account and preferences
           </Text>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.statValue, { color: colors.accent }]}>127</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Inspections
+        {!session ? (
+          <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {isSignUp ? 'Create Account' : 'Sign In'}
             </Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.statValue, { color: colors.success }]}>$2.4M</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Revenue
-            </Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>94%</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Close Rate
-            </Text>
-          </View>
-        </View>
+            
+            <TextInput
+              style={[styles.input, { 
+                backgroundColor: colors.background, 
+                color: colors.text,
+                borderColor: colors.border 
+              }]}
+              placeholder="Email"
+              placeholderTextColor={colors.textSecondary}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
 
-        {/* Settings Sections */}
-        {settingsSections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-              {section.title}
-            </Text>
-            <View style={[styles.sectionCard, { backgroundColor: colors.card }]}>
-              {section.items.map((item, itemIndex) => (
-                <React.Fragment key={item.id}>
-                  <TouchableOpacity
-                    style={styles.settingItem}
-                    onPress={() => {
-                      if (item.id === 'theme') {
-                        handleThemeChange();
-                      } else {
-                        console.log('Navigate to:', item.id);
-                      }
-                    }}
-                  >
-                    <View style={styles.settingLeft}>
-                      <View style={[styles.settingIcon, { backgroundColor: colors.accent + '20' }]}>
-                        <IconSymbol
-                          ios_icon_name={item.icon}
-                          android_material_icon_name={item.iconAndroid}
-                          size={22}
-                          color={colors.accent}
-                        />
-                      </View>
-                      <Text style={[styles.settingLabel, { color: colors.text }]}>
-                        {item.label}
-                      </Text>
-                    </View>
-                    {item.type === 'select' && (
-                      <View style={styles.settingRight}>
-                        <Text style={[styles.settingValue, { color: colors.textSecondary }]}>
-                          {getThemeLabel()}
-                        </Text>
-                        <IconSymbol
-                          ios_icon_name="chevron.right"
-                          android_material_icon_name="chevron_right"
-                          size={20}
-                          color={colors.textSecondary}
-                        />
-                      </View>
-                    )}
-                    {item.type === 'navigation' && (
-                      <IconSymbol
-                        ios_icon_name="chevron.right"
-                        android_material_icon_name="chevron_right"
-                        size={20}
-                        color={colors.textSecondary}
-                      />
-                    )}
-                  </TouchableOpacity>
-                  {itemIndex < section.items.length - 1 && (
-                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                  )}
-                </React.Fragment>
-              ))}
+            <TextInput
+              style={[styles.input, { 
+                backgroundColor: colors.background, 
+                color: colors.text,
+                borderColor: colors.border 
+              }]}
+              placeholder="Password"
+              placeholderTextColor={colors.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.primary }]}
+              onPress={isSignUp ? handleSignUp : handleSignIn}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {isSignUp ? 'Sign Up' : 'Sign In'}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => setIsSignUp(!isSignUp)}
+            >
+              <Text style={[styles.switchButtonText, { color: colors.primary }]}>
+                {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={[styles.infoCard, { backgroundColor: colors.background }]}>
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                ℹ️ Authentication is required to use AI analysis and historical data features.
+              </Text>
             </View>
           </View>
-        ))}
+        ) : (
+          <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Account</Text>
+            
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{session.user.email}</Text>
+            </View>
 
-        {/* Sign Out Button */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={[styles.signOutButton, { backgroundColor: colors.error }]}
-            onPress={() => Alert.alert('Sign Out', 'Are you sure you want to sign out?')}
-          >
-            <IconSymbol
-              ios_icon_name="arrow.right.square.fill"
-              android_material_icon_name="logout"
-              size={20}
-              color="#FFFFFF"
-            />
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </TouchableOpacity>
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Status:</Text>
+              <Text style={[styles.infoValue, { color: '#10B981' }]}>✓ Signed In</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.error }]}
+              onPress={handleSignOut}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.buttonText}>Sign Out</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Theme</Text>
+          
+          <View style={styles.themeButtons}>
+            <TouchableOpacity
+              style={[
+                styles.themeButton,
+                { 
+                  backgroundColor: theme === 'light' ? colors.primary : colors.background,
+                  borderColor: colors.border,
+                }
+              ]}
+              onPress={() => setTheme('light')}
+            >
+              <Text style={[
+                styles.themeButtonText,
+                { color: theme === 'light' ? '#FFFFFF' : colors.text }
+              ]}>
+                ☀️ Light
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.themeButton,
+                { 
+                  backgroundColor: theme === 'dark' ? colors.primary : colors.background,
+                  borderColor: colors.border,
+                }
+              ]}
+              onPress={() => setTheme('dark')}
+            >
+              <Text style={[
+                styles.themeButtonText,
+                { color: theme === 'dark' ? '#FFFFFF' : colors.text }
+              ]}>
+                🌙 Dark
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.themeButton,
+                { 
+                  backgroundColor: theme === 'field' ? colors.primary : colors.background,
+                  borderColor: colors.border,
+                }
+              ]}
+              onPress={() => setTheme('field')}
+            >
+              <Text style={[
+                styles.themeButtonText,
+                { color: theme === 'field' ? '#FFFFFF' : colors.text }
+              ]}>
+                🏗️ Field
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Version Info */}
-        <View style={styles.versionInfo}>
-          <Text style={[styles.versionText, { color: colors.textSecondary }]}>
-            InspectAI v1.0.0
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>About InspectAI</Text>
+          <Text style={[styles.aboutText, { color: colors.textSecondary }]}>
+            InspectAI is a professional property inspection platform powered by advanced AI technology.
           </Text>
-          <Text style={[styles.versionText, { color: colors.textSecondary }]}>
-            © 2024 All rights reserved
+          <Text style={[styles.aboutText, { color: colors.textSecondary }]}>
+            Version 1.0.0
           </Text>
         </View>
-      </ScrollView>
-    </View>
+
+        <View style={styles.bottomSpacer} />
+      </View>
+    </ScrollView>
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 48,
-    paddingBottom: 120,
+  content: {
+    padding: 20,
   },
   header: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 32,
-  },
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    boxShadow: '0px 4px 16px rgba(6, 182, 212, 0.3)',
-    elevation: 4,
-  },
-  avatarText: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  name: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 4,
-    letterSpacing: -0.5,
-  },
-  email: {
-    fontSize: 16,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 32,
-  },
-  statCard: {
-    flex: 1,
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.06)',
-    elevation: 3,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  section: {
-    paddingHorizontal: 20,
     marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 13,
+  title: {
+    fontSize: 28,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+  },
+  section: {
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
     marginBottom: 12,
-    letterSpacing: 0.5,
   },
-  sectionCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
-    elevation: 4,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  settingIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
+  button: {
+    height: 56,
+    borderRadius: 12,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
   },
-  settingLabel: {
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  switchButton: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  switchButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  infoCard: {
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  infoText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  infoLabel: {
+    fontSize: 14,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  themeButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  themeButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  themeButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
-  settingRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  settingValue: {
+  aboutText: {
     fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
   },
-  divider: {
-    height: 1,
-    marginLeft: 72,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 14,
-    gap: 8,
-    boxShadow: '0px 4px 12px rgba(239, 68, 68, 0.3)',
-    elevation: 4,
-  },
-  signOutText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  versionInfo: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 16,
-  },
-  versionText: {
-    fontSize: 12,
-    marginBottom: 4,
+  bottomSpacer: {
+    height: 100,
   },
 });

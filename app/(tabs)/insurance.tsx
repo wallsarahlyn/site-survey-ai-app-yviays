@@ -1,376 +1,342 @@
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { IconSymbol } from '@/components/IconSymbol';
-import { useThemeContext } from '@/contexts/ThemeContext';
-import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useInspection } from '@/contexts/InspectionContext';
+import { fetchHistoricalAnalysis } from '@/utils/historicalDataFetcher';
+import { generateInsuranceVerificationPDF } from '@/utils/insurancePdfGenerator';
+import HistoricalAnalysisDisplay from '@/components/HistoricalAnalysisDisplay';
+import { InspectionReport } from '@/types/inspection';
+import { supabase } from '@/app/integrations/supabase/client';
 
 export default function InsuranceScreen() {
-  const { colors } = useThemeContext();
-  const router = useRouter();
+  const { colors } = useTheme();
+  const {
+    propertyAddress,
+    setPropertyAddress,
+    historicalAnalysis,
+    setHistoricalAnalysis,
+    images,
+    analysis,
+    quote,
+    roofDiagram,
+  } = useInspection();
 
-  const riskCategories = [
-    {
-      id: '1',
-      name: 'Storm History',
-      icon: 'cloud.bolt.fill',
-      iconAndroid: 'thunderstorm',
-      score: 7.2,
-      status: 'high',
-      description: '3 major storms in past 5 years',
-    },
-    {
-      id: '2',
-      name: 'Hail Risk',
-      icon: 'cloud.hail.fill',
-      iconAndroid: 'ac_unit',
-      score: 5.8,
-      status: 'medium',
-      description: 'Moderate hail activity zone',
-    },
-    {
-      id: '3',
-      name: 'Wind Damage',
-      icon: 'wind',
-      iconAndroid: 'air',
-      score: 6.5,
-      status: 'medium',
-      description: 'High wind zone (80+ mph)',
-    },
-    {
-      id: '4',
-      name: 'Flood Risk',
-      icon: 'water.waves',
-      iconAndroid: 'water',
-      score: 3.2,
-      status: 'low',
-      description: 'FEMA Zone X (minimal risk)',
-    },
-    {
-      id: '5',
-      name: 'Fire Risk',
-      icon: 'flame.fill',
-      iconAndroid: 'local_fire_department',
-      score: 4.1,
-      status: 'low',
-      description: 'Low wildfire risk zone',
-    },
-  ];
+  const [localAddress, setLocalAddress] = useState(propertyAddress);
+  const [isFetching, setIsFetching] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const getScoreColor = (status: string) => {
-    switch (status) {
-      case 'high': return colors.error;
-      case 'medium': return colors.warning;
-      case 'low': return colors.success;
-      default: return colors.textSecondary;
+  // Check authentication status on mount
+  React.useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
+
+  const handleFetchData = async () => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Authentication Required',
+        'You need to be signed in to fetch historical data. Please sign in from the Profile tab.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    if (!localAddress.trim()) {
+      Alert.alert('Missing Address', 'Please enter a property address.');
+      return;
+    }
+
+    setIsFetching(true);
+
+    try {
+      console.log('Fetching historical data for:', localAddress);
+      const data = await fetchHistoricalAnalysis(localAddress);
+      
+      setHistoricalAnalysis(data);
+      setPropertyAddress(localAddress);
+
+      Alert.alert(
+        'Data Retrieved',
+        'Historical analysis has been completed successfully!',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Historical data fetch error:', error);
+      Alert.alert(
+        'Fetch Error',
+        error instanceof Error ? error.message : 'Failed to fetch historical data. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsFetching(false);
     }
   };
 
-  const styles = createStyles(colors);
+  const handleGeneratePDF = async () => {
+    if (!historicalAnalysis) {
+      Alert.alert('No Data', 'Please fetch historical data first.');
+      return;
+    }
+
+    if (!analysis || !quote) {
+      Alert.alert(
+        'Incomplete Inspection',
+        'Please complete a property inspection first from the Inspection tab.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+
+    try {
+      const report: InspectionReport = {
+        id: `INS-${Date.now()}`,
+        propertyAddress: propertyAddress || 'Unknown Address',
+        inspectionDate: new Date(),
+        images,
+        aiAnalysis: analysis,
+        quote,
+        roofDiagram: roofDiagram || undefined,
+      };
+
+      await generateInsuranceVerificationPDF(report, historicalAnalysis);
+      
+      Alert.alert(
+        'PDF Generated',
+        'Your insurance verification report has been generated and is ready to share!',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      Alert.alert(
+        'PDF Error',
+        'Failed to generate PDF. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Insurance Analysis</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Insurance Verification</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Risk Assessment & Verification
+            Historical data analysis for underwriting
           </Text>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.accent }]}
-            onPress={() => router.push('/(tabs)/(home)/')}
-          >
-            <IconSymbol
-              ios_icon_name="doc.text.magnifyingglass"
-              android_material_icon_name="search"
-              size={32}
-              color="#FFFFFF"
-            />
-            <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Fetch Historical Data</Text>
-              <Text style={styles.actionSubtitle}>
-                Get storm history, FEMA zones, and risk scores
-              </Text>
-            </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron_right"
-              size={24}
-              color="#FFFFFF"
-            />
-          </TouchableOpacity>
-        </View>
+        {!isAuthenticated && (
+          <View style={[styles.warningCard, { backgroundColor: colors.cardBackground, borderColor: '#F59E0B' }]}>
+            <Text style={[styles.warningTitle, { color: '#F59E0B' }]}>⚠️ Sign In Required</Text>
+            <Text style={[styles.warningText, { color: colors.textSecondary }]}>
+              Historical data analysis requires authentication. Please sign in from the Profile tab to use this feature.
+            </Text>
+          </View>
+        )}
 
-        {/* Risk Categories */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Risk Categories</Text>
-          {riskCategories.map((category) => (
-            <View
-              key={category.id}
-              style={[styles.riskCard, { backgroundColor: colors.card }]}
-            >
-              <View style={[styles.riskIcon, { backgroundColor: getScoreColor(category.status) + '20' }]}>
-                <IconSymbol
-                  ios_icon_name={category.icon}
-                  android_material_icon_name={category.iconAndroid}
-                  size={28}
-                  color={getScoreColor(category.status)}
-                />
-              </View>
-              <View style={styles.riskInfo}>
-                <Text style={[styles.riskName, { color: colors.text }]}>
-                  {category.name}
-                </Text>
-                <Text style={[styles.riskDescription, { color: colors.textSecondary }]}>
-                  {category.description}
-                </Text>
-              </View>
-              <View style={styles.riskScore}>
-                <Text style={[styles.scoreValue, { color: getScoreColor(category.status) }]}>
-                  {category.score}
-                </Text>
-                <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>
-                  /10
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Report Actions */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Generate Reports</Text>
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
+          <TextInput
+            style={[styles.input, { 
+              backgroundColor: colors.background, 
+              color: colors.text,
+              borderColor: colors.border 
+            }]}
+            placeholder="Enter property address"
+            placeholderTextColor={colors.textSecondary}
+            value={localAddress}
+            onChangeText={setLocalAddress}
+          />
           
           <TouchableOpacity
-            style={[styles.reportButton, { backgroundColor: colors.card }]}
+            style={[styles.fetchButton, { backgroundColor: colors.primary }]}
+            onPress={handleFetchData}
+            disabled={isFetching || !isAuthenticated}
           >
-            <View style={styles.reportContent}>
-              <IconSymbol
-                ios_icon_name="doc.text.fill"
-                android_material_icon_name="description"
-                size={24}
-                color={colors.primary}
-              />
-              <View style={styles.reportInfo}>
-                <Text style={[styles.reportTitle, { color: colors.text }]}>
-                  Insurance Verification Report
-                </Text>
-                <Text style={[styles.reportDescription, { color: colors.textSecondary }]}>
-                  Comprehensive report for claims adjusters
-                </Text>
-              </View>
-            </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron_right"
-              size={24}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.reportButton, { backgroundColor: colors.card }]}
-          >
-            <View style={styles.reportContent}>
-              <IconSymbol
-                ios_icon_name="chart.bar.doc.horizontal.fill"
-                android_material_icon_name="assessment"
-                size={24}
-                color={colors.accent}
-              />
-              <View style={styles.reportInfo}>
-                <Text style={[styles.reportTitle, { color: colors.text }]}>
-                  Risk Assessment Report
-                </Text>
-                <Text style={[styles.reportDescription, { color: colors.textSecondary }]}>
-                  Detailed risk analysis and recommendations
-                </Text>
-              </View>
-            </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron_right"
-              size={24}
-              color={colors.textSecondary}
-            />
+            {isFetching ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.fetchButtonText}>
+                {isAuthenticated ? 'Fetch Historical Data' : 'Sign In to Fetch Data'}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
-        {/* Info Card */}
-        <View style={styles.section}>
-          <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-            <IconSymbol
-              ios_icon_name="info.circle.fill"
-              android_material_icon_name="info"
-              size={32}
-              color={colors.info}
-            />
-            <View style={styles.infoContent}>
-              <Text style={[styles.infoTitle, { color: colors.text }]}>
-                Data Sources
-              </Text>
-              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                - NOAA Storm Events Database{'\n'}
-                - FEMA Flood Zone Maps{'\n'}
-                - National Weather Service{'\n'}
-                - Local Building Records{'\n'}
-                - Insurance Claim History
-              </Text>
+        {historicalAnalysis && (
+          <>
+            <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Historical Analysis</Text>
+              <HistoricalAnalysisDisplay analysis={historicalAnalysis} />
             </View>
-          </View>
+
+            <TouchableOpacity
+              style={[styles.pdfButton, { backgroundColor: colors.primary }]}
+              onPress={handleGeneratePDF}
+              disabled={isGeneratingPDF || !analysis || !quote}
+            >
+              {isGeneratingPDF ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.pdfButtonText}>
+                  Generate Insurance Report
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {(!analysis || !quote) && (
+              <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
+                <Text style={[styles.infoTitle, { color: colors.text }]}>📋 Complete Inspection Required</Text>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                  To generate a complete insurance verification report, please complete a property inspection from the Inspection tab first.
+                </Text>
+              </View>
+            )}
+          </>
+        )}
+
+        <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.infoTitle, { color: colors.text }]}>ℹ️ About Insurance Verification</Text>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+            This tool fetches comprehensive historical data including:
+          </Text>
+          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+            • Storm events and weather patterns (5 years)
+          </Text>
+          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+            • Fire and flood risk assessments
+          </Text>
+          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+            • Insurance claim statistics for the area
+          </Text>
+          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+            • Regional roof age and replacement patterns
+          </Text>
+          <Text style={[styles.bulletPoint, { color: colors.textSecondary }]}>
+            • Multi-factor risk scoring
+          </Text>
         </View>
-      </ScrollView>
-    </View>
+
+        <View style={styles.bottomSpacer} />
+      </View>
+    </ScrollView>
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 48,
-    paddingBottom: 120,
+  content: {
+    padding: 20,
   },
   header: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
   },
+  warningCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginBottom: 20,
+  },
+  warningTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  warningText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     marginBottom: 16,
   },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 16,
-    gap: 16,
-    boxShadow: '0px 4px 12px rgba(0, 217, 255, 0.3)',
-    elevation: 4,
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    marginBottom: 16,
   },
-  actionContent: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  actionSubtitle: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
-  riskCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    gap: 16,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
-  },
-  riskIcon: {
-    width: 56,
+  fetchButton: {
     height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
+    borderRadius: 12,
     justifyContent: 'center',
-  },
-  riskInfo: {
-    flex: 1,
-  },
-  riskName: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  riskDescription: {
-    fontSize: 13,
-  },
-  riskScore: {
     alignItems: 'center',
   },
-  scoreValue: {
-    fontSize: 24,
-    fontWeight: '700',
+  fetchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
-  scoreLabel: {
-    fontSize: 12,
-  },
-  reportButton: {
-    flexDirection: 'row',
+  pdfButton: {
+    height: 56,
+    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    marginBottom: 20,
   },
-  reportContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    flex: 1,
-  },
-  reportInfo: {
-    flex: 1,
-  },
-  reportTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  reportDescription: {
-    fontSize: 13,
+  pdfButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
   infoCard: {
-    flexDirection: 'row',
     padding: 20,
-    borderRadius: 16,
-    gap: 16,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
-  },
-  infoContent: {
-    flex: 1,
+    borderRadius: 12,
+    marginBottom: 20,
   },
   infoTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     marginBottom: 12,
   },
   infoText: {
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  bulletPoint: {
+    fontSize: 14,
+    lineHeight: 24,
+    marginLeft: 8,
+  },
+  bottomSpacer: {
+    height: 100,
   },
 });

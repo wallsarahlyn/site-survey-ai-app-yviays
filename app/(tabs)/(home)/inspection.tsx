@@ -1,19 +1,30 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
-import { useThemeContext } from '@/contexts/ThemeContext';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
+import { useRouter } from 'expo-router';
 import { useInspection } from '@/contexts/InspectionContext';
-import { ImageUploader } from '@/components/ImageUploader';
-import { AnalysisResults } from '@/components/AnalysisResults';
-import { QuoteDisplay } from '@/components/QuoteDisplay';
-import { IconSymbol } from '@/components/IconSymbol';
+import { useTheme } from '@/contexts/ThemeContext';
 import { analyzeImages } from '@/utils/aiAnalysis';
 import { generateQuote } from '@/utils/quoteGenerator';
 import { generateInspectionPDF } from '@/utils/pdfGenerator';
 import { InspectionReport } from '@/types/inspection';
+import ImageUploader from '@/components/ImageUploader';
+import AnalysisResults from '@/components/AnalysisResults';
+import QuoteDisplay from '@/components/QuoteDisplay';
+import { supabase } from '@/app/integrations/supabase/client';
 
 export default function InspectionScreen() {
-  const { colors } = useThemeContext();
+  const router = useRouter();
+  const { colors } = useTheme();
   const {
     images,
     setImages,
@@ -24,14 +35,35 @@ export default function InspectionScreen() {
     propertyAddress,
     setPropertyAddress,
     roofDiagram,
+    resetInspection,
   } = useInspection();
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const handleStartInspection = async () => {
+  // Check authentication status on mount
+  React.useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
+
+  const handleAnalyze = async () => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Authentication Required',
+        'You need to be signed in to use AI analysis. Please sign in from the Profile tab.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     if (images.length === 0) {
-      Alert.alert('No Images', 'Please upload at least one image to start the inspection.');
+      Alert.alert('No Images', 'Please upload at least one image to analyze.');
       return;
     }
 
@@ -40,40 +72,46 @@ export default function InspectionScreen() {
       return;
     }
 
+    setIsAnalyzing(true);
+
     try {
-      setIsAnalyzing(true);
-      console.log('Starting AI analysis with', images.length, 'images');
-
-      // Run AI analysis
-      const analysisResult = await analyzeImages(images.map(img => img.uri));
-      console.log('AI analysis completed:', analysisResult);
-      setAnalysis(analysisResult);
-
-      // Generate quote based on analysis
+      console.log('Starting AI analysis...');
+      const imageUris = images.map(img => img.uri);
+      const aiAnalysis = await analyzeImages(imageUris);
+      
+      console.log('AI analysis completed, generating quote...');
       const roofArea = roofDiagram?.totalArea || 2000;
-      const quoteResult = generateQuote(analysisResult, roofArea);
-      console.log('Quote generated:', quoteResult);
-      setQuote(quoteResult);
+      const serviceQuote = generateQuote(aiAnalysis, roofArea);
 
-      Alert.alert('Success', 'Inspection analysis completed successfully!');
+      setAnalysis(aiAnalysis);
+      setQuote(serviceQuote);
+
+      Alert.alert(
+        'Analysis Complete',
+        'Your property inspection has been analyzed successfully!',
+        [{ text: 'OK' }]
+      );
     } catch (error) {
-      console.error('Error during inspection:', error);
-      Alert.alert('Error', 'Failed to analyze images. Please try again.');
+      console.error('Analysis error:', error);
+      Alert.alert(
+        'Analysis Error',
+        error instanceof Error ? error.message : 'Failed to analyze images. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleGenerateReport = async () => {
+  const handleGeneratePDF = async () => {
     if (!analysis || !quote) {
-      Alert.alert('No Analysis', 'Please complete the inspection analysis first.');
+      Alert.alert('Incomplete Data', 'Please complete the analysis first.');
       return;
     }
 
-    try {
-      setIsGeneratingPDF(true);
-      console.log('Generating PDF report...');
+    setIsGeneratingPDF(true);
 
+    try {
       const report: InspectionReport = {
         id: `INS-${Date.now()}`,
         propertyAddress: propertyAddress || 'Unknown Address',
@@ -85,11 +123,19 @@ export default function InspectionScreen() {
       };
 
       await generateInspectionPDF(report);
-      console.log('PDF report generated successfully');
-      Alert.alert('Success', 'Inspection report generated and ready to share!');
+      
+      Alert.alert(
+        'PDF Generated',
+        'Your inspection report has been generated and is ready to share!',
+        [{ text: 'OK' }]
+      );
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      Alert.alert('Error', 'Failed to generate PDF report. Please try again.');
+      console.error('PDF generation error:', error);
+      Alert.alert(
+        'PDF Error',
+        'Failed to generate PDF. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -98,323 +144,254 @@ export default function InspectionScreen() {
   const handleReset = () => {
     Alert.alert(
       'Reset Inspection',
-      'Are you sure you want to reset? All data will be cleared.',
+      'Are you sure you want to start a new inspection? All current data will be lost.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reset',
           style: 'destructive',
           onPress: () => {
-            setImages([]);
-            setAnalysis(null);
-            setQuote(null);
-            setPropertyAddress('');
+            resetInspection();
+            Alert.alert('Reset Complete', 'You can now start a new inspection.');
           },
         },
       ]
     );
   };
 
-  const styles = createStyles(colors);
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: colors.text }]}>New Inspection</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Upload photos and analyze property
+          <Text style={[styles.title, { color: colors.text }]}>Property Inspection</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Upload photos and get AI-powered analysis
+          </Text>
+        </View>
+
+        {!isAuthenticated && (
+          <View style={[styles.warningCard, { backgroundColor: colors.cardBackground, borderColor: '#F59E0B' }]}>
+            <Text style={[styles.warningTitle, { color: '#F59E0B' }]}>⚠️ Sign In Required</Text>
+            <Text style={[styles.warningText, { color: colors.textSecondary }]}>
+              AI analysis requires authentication. Please sign in from the Profile tab to use this feature.
             </Text>
           </View>
-          {(analysis || images.length > 0) && (
-            <TouchableOpacity
-              style={[styles.resetButton, { backgroundColor: colors.card }]}
-              onPress={handleReset}
-            >
-              <IconSymbol
-                ios_icon_name="arrow.counterclockwise"
-                android_material_icon_name="refresh"
-                size={24}
-                color={colors.error}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+        )}
 
-        {/* Property Address Input */}
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
-          <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <IconSymbol
-              ios_icon_name="location.fill"
-              android_material_icon_name="location_on"
-              size={20}
-              color={colors.textSecondary}
-            />
-            <TextInput
-              style={[styles.input, { color: colors.text }]}
-              placeholder="Enter property address"
-              placeholderTextColor={colors.textSecondary}
-              value={propertyAddress}
-              onChangeText={setPropertyAddress}
-            />
-          </View>
+          <TextInput
+            style={[styles.input, { 
+              backgroundColor: colors.background, 
+              color: colors.text,
+              borderColor: colors.border 
+            }]}
+            placeholder="Enter property address"
+            placeholderTextColor={colors.textSecondary}
+            value={propertyAddress}
+            onChangeText={setPropertyAddress}
+          />
         </View>
 
-        {/* Image Upload Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Upload Photos</Text>
-          <ImageUploader images={images} onImagesChange={setImages} maxImages={20} />
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Upload Images</Text>
+          <ImageUploader images={images} onImagesChange={setImages} />
         </View>
 
-        {/* Start Inspection Button */}
-        {!analysis && images.length > 0 && (
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-              onPress={handleStartInspection}
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <React.Fragment>
-                  <IconSymbol
-                    ios_icon_name="sparkles"
-                    android_material_icon_name="auto_awesome"
-                    size={24}
-                    color="#FFFFFF"
-                  />
-                  <Text style={styles.primaryButtonText}>Start AI Analysis</Text>
-                </React.Fragment>
-              )}
-            </TouchableOpacity>
-          </View>
+        {images.length > 0 && !analysis && (
+          <TouchableOpacity
+            style={[styles.analyzeButton, { backgroundColor: colors.primary }]}
+            onPress={handleAnalyze}
+            disabled={isAnalyzing || !isAuthenticated}
+          >
+            {isAnalyzing ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.analyzeButtonText}>
+                {isAuthenticated ? 'Analyze with AI' : 'Sign In to Analyze'}
+              </Text>
+            )}
+          </TouchableOpacity>
         )}
 
-        {/* Analysis Results */}
         {analysis && (
-          <View style={styles.section}>
-            <AnalysisResults analysis={analysis} />
-          </View>
+          <>
+            <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Analysis Results</Text>
+              <AnalysisResults analysis={analysis} />
+            </View>
+
+            {quote && (
+              <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Service Quote</Text>
+                <QuoteDisplay quote={quote} />
+              </View>
+            )}
+
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[styles.pdfButton, { backgroundColor: colors.primary }]}
+                onPress={handleGeneratePDF}
+                disabled={isGeneratingPDF}
+              >
+                {isGeneratingPDF ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.pdfButtonText}>Generate PDF Report</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.resetButton, { backgroundColor: colors.error }]}
+                onPress={handleReset}
+              >
+                <Text style={styles.resetButtonText}>Start New Inspection</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
-        {/* Quote Display */}
-        {quote && (
-          <View style={styles.section}>
-            <QuoteDisplay quote={quote} />
-          </View>
-        )}
-
-        {/* Generate Report Button */}
-        {analysis && quote && (
-          <View style={styles.section}>
+        {roofDiagram && (
+          <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.infoTitle, { color: colors.text }]}>📐 Roof Diagram Available</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              Total Area: {roofDiagram.totalArea.toFixed(2)} sq ft
+            </Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              Facets: {roofDiagram.facets.length}
+            </Text>
             <TouchableOpacity
-              style={[styles.secondaryButton, { backgroundColor: colors.success }]}
-              onPress={handleGenerateReport}
-              disabled={isGeneratingPDF}
+              style={[styles.linkButton, { borderColor: colors.primary }]}
+              onPress={() => router.push('/(tabs)/drawing')}
             >
-              {isGeneratingPDF ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <React.Fragment>
-                  <IconSymbol
-                    ios_icon_name="doc.text.fill"
-                    android_material_icon_name="description"
-                    size={24}
-                    color="#FFFFFF"
-                  />
-                  <Text style={styles.secondaryButtonText}>Generate PDF Report</Text>
-                </React.Fragment>
-              )}
+              <Text style={[styles.linkButtonText, { color: colors.primary }]}>
+                View Roof Drawing
+              </Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Info Card */}
-        {!analysis && images.length === 0 && (
-          <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <IconSymbol
-              ios_icon_name="info.circle.fill"
-              android_material_icon_name="info"
-              size={32}
-              color={colors.primary}
-            />
-            <Text style={[styles.infoTitle, { color: colors.text }]}>How It Works</Text>
-            <View style={styles.infoSteps}>
-              <View style={styles.infoStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>1</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-                  Enter the property address
-                </Text>
-              </View>
-              <View style={styles.infoStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>2</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-                  Upload photos of the property
-                </Text>
-              </View>
-              <View style={styles.infoStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>3</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-                  Click &apos;Start AI Analysis&apos; to analyze
-                </Text>
-              </View>
-              <View style={styles.infoStep}>
-                <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.stepNumberText}>4</Text>
-                </View>
-                <Text style={[styles.stepText, { color: colors.textSecondary }]}>
-                  Review results and generate PDF report
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-    </View>
+        <View style={styles.bottomSpacer} />
+      </View>
+    </ScrollView>
   );
 }
 
-const createStyles = (colors: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 48,
-    paddingBottom: 120,
+  content: {
+    padding: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
     marginBottom: 24,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
   },
-  resetButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
+  warningCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginBottom: 20,
+  },
+  warningTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  warningText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    fontWeight: '600',
+    marginBottom: 16,
   },
   input: {
-    flex: 1,
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
     fontSize: 16,
-    padding: 0,
   },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
+  analyzeButton: {
+    height: 56,
     borderRadius: 12,
-    gap: 12,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-    elevation: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  primaryButtonText: {
+  analyzeButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
   },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 12,
+  actionButtons: {
     gap: 12,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-    elevation: 4,
+    marginBottom: 20,
   },
-  secondaryButtonText: {
+  pdfButton: {
+    height: 56,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pdfButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
+  },
+  resetButton: {
+    height: 56,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
   infoCard: {
-    marginHorizontal: 20,
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
   },
   infoTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginTop: 16,
-    marginBottom: 24,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
   },
-  infoSteps: {
-    width: '100%',
-    gap: 16,
+  infoText: {
+    fontSize: 14,
+    marginBottom: 8,
   },
-  infoStep: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  stepNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
+  linkButton: {
+    marginTop: 12,
+    height: 44,
+    borderWidth: 2,
+    borderRadius: 8,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  stepNumberText: {
-    color: '#FFFFFF',
+  linkButtonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
   },
-  stepText: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 22,
+  bottomSpacer: {
+    height: 100,
   },
 });
