@@ -21,6 +21,7 @@ import { InspectionReport } from '@/types/inspection';
 import ImageUploader from '@/components/ImageUploader';
 import AnalysisResults from '@/components/AnalysisResults';
 import QuoteDisplay from '@/components/QuoteDisplay';
+import { IconSymbol } from '@/components/IconSymbol';
 import { supabase } from '@/app/integrations/supabase/client';
 
 export default function InspectionScreen() {
@@ -205,6 +206,10 @@ export default function InspectionScreen() {
     );
   };
 
+  const navigateToRoofDrawing = () => {
+    router.push('/(tabs)/drawing');
+  };
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
@@ -244,6 +249,34 @@ export default function InspectionScreen() {
           <ImageUploader images={images} onImagesChange={setImages} />
         </View>
 
+        <View style={[styles.roofToolCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
+          <View style={styles.roofToolHeader}>
+            <IconSymbol ios_icon_name="square.grid.3x3.fill" android_material_icon_name="grid_on" size={32} color={colors.primary} />
+            <View style={styles.roofToolTextContainer}>
+              <Text style={[styles.roofToolTitle, { color: colors.text }]}>Roof Facet Measurement Tool</Text>
+              <Text style={[styles.roofToolSubtitle, { color: colors.textSecondary }]}>
+                {roofDiagram 
+                  ? `${roofDiagram.facets.length} facets measured • ${roofDiagram.totalArea.toFixed(0)} sq ft`
+                  : 'Draw and measure roof facets for accurate estimates'}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.roofToolButton, { backgroundColor: colors.primary }]}
+            onPress={navigateToRoofDrawing}
+          >
+            <IconSymbol 
+              ios_icon_name={roofDiagram ? "pencil.circle.fill" : "plus.circle.fill"} 
+              android_material_icon_name={roofDiagram ? "edit" : "add_circle"} 
+              size={20} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.roofToolButtonText}>
+              {roofDiagram ? 'Edit Roof Diagram' : 'Create Roof Diagram'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {images.length > 0 && !analysis && (
           <TouchableOpacity
             style={[styles.analyzeButton, { backgroundColor: colors.primary }]}
@@ -274,6 +307,24 @@ export default function InspectionScreen() {
               </View>
             )}
 
+            {roofDiagram && (
+              <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.success }]}>
+                <View style={styles.infoCardHeader}>
+                  <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check_circle" size={24} color={colors.success} />
+                  <Text style={[styles.infoTitle, { color: colors.text }]}>Roof Diagram Included</Text>
+                </View>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                  Total Area: {roofDiagram.totalArea.toFixed(2)} sq ft
+                </Text>
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                  Facets: {roofDiagram.facets.length}
+                </Text>
+                <Text style={[styles.infoHighlight, { color: colors.success }]}>
+                  ✓ Roof measurements will be included in the PDF report
+                </Text>
+              </View>
+            )}
+
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: colors.success }]}
@@ -283,7 +334,10 @@ export default function InspectionScreen() {
                 {isSaving ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.actionButtonText}>Save Inspection</Text>
+                  <>
+                    <IconSymbol ios_icon_name="square.and.arrow.down.fill" android_material_icon_name="save" size={20} color="#FFFFFF" />
+                    <Text style={styles.actionButtonText}>Save Inspection</Text>
+                  </>
                 )}
               </TouchableOpacity>
 
@@ -295,7 +349,10 @@ export default function InspectionScreen() {
                 {isGeneratingPDF ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.actionButtonText}>Generate PDF Report</Text>
+                  <>
+                    <IconSymbol ios_icon_name="doc.text.fill" android_material_icon_name="description" size={20} color="#FFFFFF" />
+                    <Text style={styles.actionButtonText}>Generate PDF Report</Text>
+                  </>
                 )}
               </TouchableOpacity>
 
@@ -303,30 +360,11 @@ export default function InspectionScreen() {
                 style={[styles.actionButton, { backgroundColor: colors.error }]}
                 onPress={handleReset}
               >
+                <IconSymbol ios_icon_name="arrow.counterclockwise" android_material_icon_name="refresh" size={20} color="#FFFFFF" />
                 <Text style={styles.actionButtonText}>Start New Inspection</Text>
               </TouchableOpacity>
             </View>
           </>
-        )}
-
-        {roofDiagram && (
-          <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.infoTitle, { color: colors.text }]}>📐 Roof Diagram Available</Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              Total Area: {roofDiagram.totalArea.toFixed(2)} sq ft
-            </Text>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              Facets: {roofDiagram.facets.length}
-            </Text>
-            <TouchableOpacity
-              style={[styles.linkButton, { borderColor: colors.primary }]}
-              onPress={() => router.push('/(tabs)/drawing')}
-            >
-              <Text style={[styles.linkButtonText, { color: colors.primary }]}>
-                View Roof Drawing
-              </Text>
-            </TouchableOpacity>
-          </View>
         )}
 
         <View style={styles.bottomSpacer} />
@@ -385,6 +423,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
   },
+  roofToolCard: {
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 2,
+  },
+  roofToolHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  roofToolTextContainer: {
+    flex: 1,
+  },
+  roofToolTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  roofToolSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  roofToolButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 50,
+    borderRadius: 10,
+    gap: 8,
+  },
+  roofToolButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   analyzeButton: {
     height: 56,
     borderRadius: 12,
@@ -402,10 +477,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     height: 56,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    gap: 8,
   },
   actionButtonText: {
     color: '#FFFFFF',
@@ -416,27 +493,26 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginBottom: 20,
+    borderWidth: 2,
+  },
+  infoCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   infoTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 12,
   },
   infoText: {
     fontSize: 14,
     marginBottom: 8,
   },
-  linkButton: {
-    marginTop: 12,
-    height: 44,
-    borderWidth: 2,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  linkButtonText: {
-    fontSize: 16,
+  infoHighlight: {
+    fontSize: 14,
     fontWeight: '600',
+    marginTop: 8,
   },
   bottomSpacer: {
     height: 100,

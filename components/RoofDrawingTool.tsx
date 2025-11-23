@@ -9,21 +9,23 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
 interface RoofDrawingToolProps {
-  onDiagramComplete: (diagram: RoofDiagram) => void;
+  onDiagramComplete: (diagram: RoofDiagram, address: string) => void;
   initialDiagram?: RoofDiagram;
+  initialAddress?: string;
 }
 
 const CANVAS_WIDTH = Dimensions.get('window').width - 32;
 const CANVAS_HEIGHT = 400;
 const PIXELS_PER_FOOT = 10; // Scale: 10 pixels = 1 foot
 
-export function RoofDrawingTool({ onDiagramComplete, initialDiagram }: RoofDrawingToolProps) {
+export function RoofDrawingTool({ onDiagramComplete, initialDiagram, initialAddress }: RoofDrawingToolProps) {
   const [facets, setFacets] = useState<RoofFacet[]>(initialDiagram?.facets || []);
   const [currentPoints, setCurrentPoints] = useState<{ x: number; y: number }[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedFacetId, setSelectedFacetId] = useState<string | null>(null);
   const [facetLabel, setFacetLabel] = useState('');
   const [facetPitch, setFacetPitch] = useState('6');
+  const [propertyAddress, setPropertyAddress] = useState(initialAddress || '');
 
   const calculateArea = (points: { x: number; y: number }[]): number => {
     if (points.length < 3) return 0;
@@ -144,6 +146,11 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram }: RoofDrawi
       return;
     }
 
+    if (!propertyAddress.trim()) {
+      Alert.alert('Missing Address', 'Please enter a property address before saving.');
+      return;
+    }
+
     const totalArea = facets.reduce((sum, facet) => sum + facet.area, 0);
 
     const diagram: RoofDiagram = {
@@ -154,12 +161,18 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram }: RoofDrawi
       updatedAt: new Date(),
     };
 
-    onDiagramComplete(diagram);
+    onDiagramComplete(diagram, propertyAddress);
+    Alert.alert('Success', 'Roof diagram and address saved successfully!');
   };
 
   const generateRoofReport = async () => {
     if (facets.length === 0) {
       Alert.alert('No Data', 'Please draw at least one roof facet before generating a report.');
+      return;
+    }
+
+    if (!propertyAddress.trim()) {
+      Alert.alert('Missing Address', 'Please enter a property address before generating a report.');
       return;
     }
 
@@ -532,6 +545,10 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram }: RoofDrawi
             
             <div class="cover-info">
               <div class="cover-info-item">
+                <div class="cover-info-label">Property Address</div>
+                <div class="cover-info-value">${propertyAddress}</div>
+              </div>
+              <div class="cover-info-item">
                 <div class="cover-info-label">Report Generated</div>
                 <div class="cover-info-value">${new Date().toLocaleDateString('en-US', { 
                   year: 'numeric', 
@@ -554,7 +571,7 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram }: RoofDrawi
           <div class="page">
             <div class="page-header">
               <h1>Executive Summary</h1>
-              <div class="report-id">Roof Measurement Analysis</div>
+              <div class="report-id">Roof Measurement Analysis - ${propertyAddress}</div>
             </div>
 
             <div class="section">
@@ -845,6 +862,22 @@ export function RoofDrawingTool({ onDiagramComplete, initialDiagram }: RoofDrawi
         </Text>
       </View>
 
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
+        <TextInput
+          style={[styles.addressInput, { 
+            backgroundColor: colors.background, 
+            color: colors.text,
+            borderColor: colors.border 
+          }]}
+          placeholder="Enter property address (e.g., 123 Main St, City, State ZIP)"
+          placeholderTextColor={colors.textSecondary}
+          value={propertyAddress}
+          onChangeText={setPropertyAddress}
+          multiline
+        />
+      </View>
+
       <View style={styles.canvasContainer}>
         <View style={styles.canvas} onTouchEnd={handleCanvasPress}>
           <Svg width={CANVAS_WIDTH} height={CANVAS_HEIGHT}>
@@ -1051,6 +1084,27 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  section: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  addressInput: {
+    height: 80,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    textAlignVertical: 'top',
   },
   canvasContainer: {
     backgroundColor: colors.card,

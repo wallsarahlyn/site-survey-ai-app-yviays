@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "site-survey-ai-app-yviays",
-    "slug": "site-survey-ai-app-yviays",
+    "name": "InspectAI",
+    "slug": "InspectAI",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/natively-dark.png",
