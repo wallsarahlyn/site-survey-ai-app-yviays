@@ -13,7 +13,14 @@ export default function DrawingScreen() {
     Alert.alert(
       'Diagram Saved',
       `Roof diagram saved successfully!\n\nTotal Area: ${diagram.totalArea.toFixed(2)} sq ft\nFacets: ${diagram.facets.length}`,
-      [{ text: 'OK' }]
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            console.log('Roof diagram saved:', diagram);
+          },
+        },
+      ]
     );
   };
 

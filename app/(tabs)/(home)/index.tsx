@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Modal } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { ImageUploader } from '@/components/ImageUploader';
 import { AnalysisResults } from '@/components/AnalysisResults';
@@ -19,7 +19,9 @@ export default function HomeScreen() {
   const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
   const [quote, setQuote] = useState<ServiceQuote | null>(null);
   const [roofDiagram, setRoofDiagram] = useState<RoofDiagram | null>(null);
-  const [propertyAddress, setPropertyAddress] = useState('123 Main Street, Anytown, USA');
+  const [propertyAddress, setPropertyAddress] = useState('');
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [tempAddress, setTempAddress] = useState('');
 
   const handleAnalyze = async () => {
     if (images.length === 0) {
@@ -52,24 +54,44 @@ export default function HomeScreen() {
       return;
     }
 
+    if (!propertyAddress.trim()) {
+      setTempAddress('');
+      setShowAddressModal(true);
+      return;
+    }
+
+    await generatePDF();
+  };
+
+  const generatePDF = async () => {
     try {
       const report: InspectionReport = {
         id: `INS-${Date.now()}`,
-        propertyAddress,
+        propertyAddress: propertyAddress || 'Property Address Not Provided',
         inspectionDate: new Date(),
         images,
-        aiAnalysis: analysis,
+        aiAnalysis: analysis!,
         roofDiagram: roofDiagram || undefined,
-        quote,
+        quote: quote!,
         notes: '',
       };
 
       await generateInspectionPDF(report);
-      Alert.alert('Success', 'PDF report generated and ready to share!');
+      Alert.alert('Success', 'Professional PDF report generated and ready to share!');
     } catch (error) {
       console.error('Error generating PDF:', error);
       Alert.alert('PDF Error', 'Failed to generate PDF report. Please try again.');
     }
+  };
+
+  const handleSaveAddress = () => {
+    if (!tempAddress.trim()) {
+      Alert.alert('Required', 'Please enter a property address.');
+      return;
+    }
+    setPropertyAddress(tempAddress);
+    setShowAddressModal(false);
+    generatePDF();
   };
 
   const handleReset = () => {
@@ -87,6 +109,7 @@ export default function HomeScreen() {
             setAnalysis(null);
             setQuote(null);
             setRoofDiagram(null);
+            setPropertyAddress('');
           },
         },
       ]
@@ -113,6 +136,18 @@ export default function HomeScreen() {
 
         {currentStep === 'upload' && (
           <View style={styles.content}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Property Information</Text>
+              <TextInput
+                style={styles.addressInput}
+                value={propertyAddress}
+                onChangeText={setPropertyAddress}
+                placeholder="Enter property address (optional)"
+                placeholderTextColor={colors.textSecondary}
+                multiline
+              />
+            </View>
+
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Upload Site Photos</Text>
               <Text style={styles.sectionDescription}>
@@ -142,10 +177,10 @@ export default function HomeScreen() {
               />
               <View style={styles.infoContent}>
                 <Text style={styles.infoTitle}>What we analyze:</Text>
-                <Text style={styles.infoText}>• Roof damage and condition</Text>
-                <Text style={styles.infoText}>• Structural issues</Text>
-                <Text style={styles.infoText}>• Solar panel compatibility</Text>
-                <Text style={styles.infoText}>• Inspection concerns</Text>
+                <Text style={styles.infoText}>- Roof damage and condition</Text>
+                <Text style={styles.infoText}>- Structural issues</Text>
+                <Text style={styles.infoText}>- Solar panel compatibility</Text>
+                <Text style={styles.infoText}>- Inspection concerns</Text>
               </View>
             </View>
           </View>
@@ -235,6 +270,49 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Address Input Modal */}
+      <Modal
+        visible={showAddressModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAddressModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Property Address</Text>
+            <Text style={styles.modalDescription}>
+              Enter the property address to include in the PDF report
+            </Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              value={tempAddress}
+              onChangeText={setTempAddress}
+              placeholder="123 Main Street, City, State ZIP"
+              placeholderTextColor={colors.textSecondary}
+              multiline
+              autoFocus
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.modalCancelButton]} 
+                onPress={() => setShowAddressModal(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.modalSaveButton]} 
+                onPress={handleSaveAddress}
+              >
+                <Text style={styles.modalSaveText}>Generate PDF</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -284,6 +362,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 16,
     lineHeight: 20,
+  },
+  addressInput: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 60,
+    textAlignVertical: 'top',
   },
   analyzeButton: {
     flexDirection: 'row',
@@ -378,5 +467,71 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  modalInput: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalSaveButton: {
+    backgroundColor: colors.primary,
+  },
+  modalCancelText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalSaveText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
