@@ -11,5 +11,5 @@ node_modules/
 *.bundle.js
 *.bundle.js.map
 
-# Ignore Supabase Edge Functions (Deno-based)
-supabase/functions/
+# Ignore Supabase Edge Functions (Deno-based, not Node.js)
+supabase/
