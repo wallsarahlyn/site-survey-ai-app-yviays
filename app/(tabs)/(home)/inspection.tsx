@@ -21,6 +21,7 @@ import { InspectionReport } from '@/types/inspection';
 import ImageUploader from '@/components/ImageUploader';
 import AnalysisResults from '@/components/AnalysisResults';
 import QuoteDisplay from '@/components/QuoteDisplay';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 import { IconSymbol } from '@/components/IconSymbol';
 import { supabase } from '@/app/integrations/supabase/client';
 
@@ -45,6 +46,7 @@ export default function InspectionScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [savedInspectionId, setSavedInspectionId] = useState<string | null>(null);
+  const [pdfProgress, setPdfProgress] = useState<string>('');
 
   // Check authentication status on mount
   React.useEffect(() => {
@@ -79,7 +81,7 @@ export default function InspectionScreen() {
     setIsAnalyzing(true);
 
     try {
-      console.log('Starting AI analysis...');
+      console.log('Starting enhanced AI analysis...');
       const imageUris = images.map(img => img.uri);
       const aiAnalysis = await analyzeImages(imageUris);
       
@@ -92,7 +94,7 @@ export default function InspectionScreen() {
 
       Alert.alert(
         'Analysis Complete',
-        'Your property inspection has been analyzed successfully!',
+        'Your property inspection has been analyzed successfully! Review the detailed findings below.',
         [{ text: 'OK' }]
       );
     } catch (error) {
@@ -133,7 +135,7 @@ export default function InspectionScreen() {
         setSavedInspectionId(inspectionId);
         Alert.alert(
           'Inspection Saved',
-          'Your inspection has been saved to your account! You can now generate a full PDF report.',
+          'Your inspection has been saved to your account! You can now generate a comprehensive PDF report.',
           [{ text: 'OK' }]
         );
       } else {
@@ -167,6 +169,7 @@ export default function InspectionScreen() {
     }
 
     setIsGeneratingPDF(true);
+    setPdfProgress('Preparing inspection data...');
 
     try {
       const report: InspectionReport = {
@@ -180,23 +183,29 @@ export default function InspectionScreen() {
         notes: '',
       };
 
-      console.log('Generating full PDF report from inspection data...');
+      console.log('Generating comprehensive PDF report from inspection data...');
+      setPdfProgress('Generating PDF on server...');
+      
       await generateInspectionPDF(report, savedInspectionId || undefined);
       
+      setPdfProgress('PDF ready!');
+      
       Alert.alert(
-        'PDF Generated',
+        'PDF Generated Successfully',
         'Your complete inspection report has been generated and is ready to share!',
         [{ text: 'OK' }]
       );
     } catch (error) {
       console.error('PDF generation error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate PDF. Please try again.';
       Alert.alert(
-        'PDF Error',
-        error instanceof Error ? error.message : 'Failed to generate PDF. Please try again.',
+        'PDF Generation Error',
+        `${errorMessage}\n\nPlease check your internet connection and try again. If the problem persists, contact support.`,
         [{ text: 'OK' }]
       );
     } finally {
       setIsGeneratingPDF(false);
+      setPdfProgress('');
     }
   };
 
@@ -229,13 +238,16 @@ export default function InspectionScreen() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Property Inspection</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Upload photos and get AI-powered analysis
+            Upload photos and get comprehensive AI-powered analysis
           </Text>
         </View>
 
         {!isAuthenticated && (
           <View style={[styles.warningCard, { backgroundColor: colors.cardBackground, borderColor: colors.warning }]}>
-            <Text style={[styles.warningTitle, { color: colors.warning }]}>⚠️ Sign In Required</Text>
+            <View style={styles.warningHeader}>
+              <IconSymbol ios_icon_name="exclamationmark.triangle.fill" android_material_icon_name="warning" size={24} color={colors.warning} />
+              <Text style={[styles.warningTitle, { color: colors.warning }]}>Sign In Required</Text>
+            </View>
             <Text style={[styles.warningText, { color: colors.textSecondary }]}>
               AI analysis and PDF generation require authentication. Please sign in from the Profile tab to use these features.
             </Text>
@@ -244,22 +256,19 @@ export default function InspectionScreen() {
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Property Address</Text>
-          <TextInput
-            style={[styles.input, { 
-              backgroundColor: colors.background, 
-              color: colors.text,
-              borderColor: colors.border 
-            }]}
-            placeholder="Enter property address"
-            placeholderTextColor={colors.textSecondary}
+          <AddressAutocomplete
             value={propertyAddress}
-            onChangeText={setPropertyAddress}
+            onAddressSelect={setPropertyAddress}
+            placeholder="Enter property address"
           />
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Upload Images</Text>
-          <ImageUploader images={images} onImagesChange={setImages} />
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+            Upload multiple photos of the property including roof, exterior walls, and any areas of concern
+          </Text>
+          <ImageUploader images={images} onImagesChange={setImages} maxImages={15} />
         </View>
 
         <View style={[styles.roofToolCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
@@ -269,8 +278,8 @@ export default function InspectionScreen() {
               <Text style={[styles.roofToolTitle, { color: colors.text }]}>Roof Facet Measurement Tool</Text>
               <Text style={[styles.roofToolSubtitle, { color: colors.textSecondary }]}>
                 {roofDiagram 
-                  ? `${roofDiagram.facets.length} facets measured • ${roofDiagram.totalArea.toFixed(0)} sq ft`
-                  : 'Draw and measure roof facets for accurate estimates'}
+                  ? `${roofDiagram.facets.length} facets measured • ${roofDiagram.totalArea.toFixed(0)} sq ft total`
+                  : 'Draw and measure roof facets for accurate estimates and detailed analysis'}
               </Text>
             </View>
           </View>
@@ -292,16 +301,30 @@ export default function InspectionScreen() {
 
         {images.length > 0 && !analysis && (
           <TouchableOpacity
-            style={[styles.analyzeButton, { backgroundColor: colors.primary }]}
+            style={[styles.analyzeButton, { 
+              backgroundColor: isAuthenticated ? colors.primary : colors.textSecondary,
+              opacity: isAnalyzing ? 0.7 : 1,
+            }]}
             onPress={handleAnalyze}
             disabled={isAnalyzing || !isAuthenticated}
           >
             {isAnalyzing ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+                <Text style={styles.analyzeButtonText}>Analyzing with AI...</Text>
+              </View>
             ) : (
-              <Text style={styles.analyzeButtonText}>
-                {isAuthenticated ? 'Analyze with AI' : 'Sign In to Analyze'}
-              </Text>
+              <>
+                <IconSymbol 
+                  ios_icon_name="sparkles" 
+                  android_material_icon_name="auto_awesome" 
+                  size={24} 
+                  color="#FFFFFF" 
+                />
+                <Text style={styles.analyzeButtonText}>
+                  {isAuthenticated ? 'Analyze with AI' : 'Sign In to Analyze'}
+                </Text>
+              </>
             )}
           </TouchableOpacity>
         )}
@@ -309,13 +332,23 @@ export default function InspectionScreen() {
         {analysis && (
           <>
             <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Analysis Results</Text>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Analysis Results</Text>
+                <View style={[styles.badge, { backgroundColor: colors.success }]}>
+                  <Text style={styles.badgeText}>Complete</Text>
+                </View>
+              </View>
               <AnalysisResults analysis={analysis} />
             </View>
 
             {quote && (
               <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Service Quote</Text>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Service Quote</Text>
+                  <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+                    <Text style={styles.badgeText}>Estimated</Text>
+                  </View>
+                </View>
                 <QuoteDisplay quote={quote} />
               </View>
             )}
@@ -326,14 +359,18 @@ export default function InspectionScreen() {
                   <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check_circle" size={24} color={colors.success} />
                   <Text style={[styles.infoTitle, { color: colors.text }]}>Roof Diagram Included</Text>
                 </View>
-                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                  Total Area: {roofDiagram.totalArea.toFixed(2)} sq ft
-                </Text>
-                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                  Facets: {roofDiagram.facets.length}
-                </Text>
+                <View style={styles.roofDiagramStats}>
+                  <View style={styles.statItem}>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Area</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{roofDiagram.totalArea.toFixed(2)} sq ft</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Facets</Text>
+                    <Text style={[styles.statValue, { color: colors.text }]}>{roofDiagram.facets.length}</Text>
+                  </View>
+                </View>
                 <Text style={[styles.infoHighlight, { color: colors.success }]}>
-                  ✓ Roof measurements will be included in the PDF report
+                  ✓ Detailed roof measurements will be included in the PDF report
                 </Text>
               </View>
             )}
@@ -341,15 +378,30 @@ export default function InspectionScreen() {
             <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
               <View style={styles.infoCardHeader}>
                 <IconSymbol ios_icon_name="doc.text.fill" android_material_icon_name="description" size={24} color={colors.primary} />
-                <Text style={[styles.infoTitle, { color: colors.text }]}>Server-Side PDF Generation</Text>
+                <Text style={[styles.infoTitle, { color: colors.text }]}>Professional PDF Report</Text>
               </View>
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                Your PDF report will be generated server-side from the inspection data, ensuring a complete, 
-                structured report with all sections properly formatted.
+                Your PDF report will be generated server-side with professional formatting, ensuring a complete, 
+                structured report with all sections properly laid out.
               </Text>
-              <Text style={[styles.infoHighlight, { color: colors.primary }]}>
-                ✓ Multi-page report with cover page, analysis, measurements, quotes, and disclaimers
-              </Text>
+              <View style={styles.featureList}>
+                <View style={styles.featureItem}>
+                  <IconSymbol ios_icon_name="checkmark.circle" android_material_icon_name="check_circle" size={16} color={colors.primary} />
+                  <Text style={[styles.featureText, { color: colors.textSecondary }]}>Multi-page report with cover page</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <IconSymbol ios_icon_name="checkmark.circle" android_material_icon_name="check_circle" size={16} color={colors.primary} />
+                  <Text style={[styles.featureText, { color: colors.textSecondary }]}>Detailed AI analysis and findings</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <IconSymbol ios_icon_name="checkmark.circle" android_material_icon_name="check_circle" size={16} color={colors.primary} />
+                  <Text style={[styles.featureText, { color: colors.textSecondary }]}>Roof measurements and diagrams</Text>
+                </View>
+                <View style={styles.featureItem}>
+                  <IconSymbol ios_icon_name="checkmark.circle" android_material_icon_name="check_circle" size={16} color={colors.primary} />
+                  <Text style={[styles.featureText, { color: colors.textSecondary }]}>Comprehensive cost breakdown</Text>
+                </View>
+              </View>
             </View>
 
             <View style={styles.actionButtons}>
@@ -360,7 +412,7 @@ export default function InspectionScreen() {
                   disabled={isSaving}
                 >
                   {isSaving ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <>
                       <IconSymbol ios_icon_name="square.and.arrow.down.fill" android_material_icon_name="save" size={20} color="#FFFFFF" />
@@ -374,18 +426,29 @@ export default function InspectionScreen() {
                 <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.success }]}>
                   <View style={styles.infoCardHeader}>
                     <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check_circle" size={20} color={colors.success} />
-                    <Text style={[styles.infoText, { color: colors.success }]}>Inspection Saved</Text>
+                    <Text style={[styles.infoText, { color: colors.success, fontWeight: '600' }]}>Inspection Saved Successfully</Text>
                   </View>
                 </View>
               )}
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.primary }]}
+                style={[styles.actionButton, { 
+                  backgroundColor: isAuthenticated ? colors.primary : colors.textSecondary,
+                  opacity: isGeneratingPDF ? 0.7 : 1,
+                }]}
                 onPress={handleGeneratePDF}
                 disabled={isGeneratingPDF || !isAuthenticated}
               >
                 {isGeneratingPDF ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                    <View style={styles.progressTextContainer}>
+                      <Text style={styles.actionButtonText}>Generating PDF...</Text>
+                      {pdfProgress && (
+                        <Text style={styles.progressText}>{pdfProgress}</Text>
+                      )}
+                    </View>
+                  </View>
                 ) : (
                   <>
                     <IconSymbol ios_icon_name="doc.text.fill" android_material_icon_name="description" size={20} color="#FFFFFF" />
@@ -397,7 +460,7 @@ export default function InspectionScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.error }]}
+                style={[styles.actionButton, styles.resetButton, { backgroundColor: colors.error }]}
                 onPress={handleReset}
               >
                 <IconSymbol ios_icon_name="arrow.counterclockwise" android_material_icon_name="refresh" size={20} color="#FFFFFF" />
@@ -430,6 +493,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
+    lineHeight: 24,
   },
   warningCard: {
     padding: 16,
@@ -437,10 +501,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginBottom: 20,
   },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   warningTitle: {
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 8,
   },
   warningText: {
     fontSize: 14,
@@ -451,17 +520,30 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 16,
   },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
+  sectionSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   roofToolCard: {
     padding: 20,
@@ -501,16 +583,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   analyzeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     height: 56,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 20,
+    gap: 8,
   },
   analyzeButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  progressTextContainer: {
+    alignItems: 'flex-start',
+  },
+  progressText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    marginTop: 4,
+    opacity: 0.9,
   },
   actionButtons: {
     gap: 12,
@@ -523,6 +621,9 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 12,
     gap: 8,
+  },
+  resetButton: {
+    marginTop: 8,
   },
   actionButtonText: {
     color: '#FFFFFF',
@@ -547,13 +648,41 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    marginBottom: 8,
     lineHeight: 20,
   },
   infoHighlight: {
     fontSize: 14,
     fontWeight: '600',
     marginTop: 8,
+  },
+  roofDiagramStats: {
+    flexDirection: 'row',
+    gap: 24,
+    marginVertical: 12,
+  },
+  statItem: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  featureList: {
+    marginTop: 12,
+    gap: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  featureText: {
+    fontSize: 13,
+    flex: 1,
   },
   bottomSpacer: {
     height: 100,
