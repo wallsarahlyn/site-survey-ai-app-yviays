@@ -13,6 +13,12 @@ export default function TabLayout() {
       label: 'Dashboard',
     },
     {
+      name: 'landing',
+      route: '/(tabs)/landing',
+      icon: 'storefront',
+      label: 'Store',
+    },
+    {
       name: 'drawing',
       route: '/(tabs)/drawing',
       icon: 'pencil',
@@ -41,6 +47,7 @@ export default function TabLayout() {
         }}
       >
         <Stack.Screen key="home" name="(home)" />
+        <Stack.Screen key="landing" name="landing" />
         <Stack.Screen key="drawing" name="drawing" />
         <Stack.Screen key="estimator" name="estimator" />
         <Stack.Screen key="operations" name="operations" />
