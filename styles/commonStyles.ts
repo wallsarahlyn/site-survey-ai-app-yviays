@@ -1,103 +1,162 @@
 
 export type ThemeMode = 'light' | 'dark' | 'field';
 
-// Advanced Color Theme Palette
-// Primary CTA Buttons: Deep Orange
-// Top Navigation / Footer: Charcoal (#0F0F10)
-// Background: Gunmetal Gray or Soft Black
-// Cards: Dark Gray (#2B2D31) with white text
-// Highlight Elements (AI badges, icons): Contractor Green or Yellow
-// Warnings: Safety Yellow
-// Success: Mint/Contractor Green
+// Enhanced Professional Color Theme Palette
+// Primary: Deep Orange (#FF5722) - Professional contractor orange
+// Secondary: Slate Blue (#4A5568) - Professional neutral
+// Accent: Vibrant Orange (#FF6B35) - Energetic highlight
+// Background: Clean whites and grays for professionalism
+// Success: Professional Green (#10B981)
+// Warning: Amber (#F59E0B)
 
 export const colors = {
-  // Primary colors - Deep Orange for CTAs
-  primary: '#FF5722', // Deep Orange
-  secondary: '#FF7043', // Lighter Deep Orange
-  accent: '#00C853', // Contractor Green for highlights
-  highlight: '#FFD600', // Yellow for highlights
-  success: '#00C853', // Contractor Green
-  error: '#FF3B30',
-  warning: '#FFD600', // Safety Yellow
-  info: '#00C853',
+  // Primary colors - Professional Deep Orange
+  primary: '#FF5722', // Deep Orange - Primary CTA
+  primaryLight: '#FF7043', // Lighter orange for hover states
+  primaryDark: '#E64A19', // Darker orange for pressed states
   
-  // Background colors - Gunmetal Gray / Soft Black
-  background: '#1A1A1D', // Soft Black
-  cardBackground: '#2B2D31', // Dark Gray for cards
+  // Secondary colors - Professional Slate
+  secondary: '#4A5568', // Slate gray for secondary elements
+  secondaryLight: '#64748B', // Lighter slate
+  secondaryDark: '#334155', // Darker slate
+  
+  // Accent colors
+  accent: '#FF6B35', // Vibrant orange for highlights
+  accentLight: '#FF8C61', // Lighter accent
+  
+  // Status colors
+  success: '#10B981', // Professional green
+  error: '#EF4444', // Professional red
+  warning: '#F59E0B', // Amber warning
+  info: '#3B82F6', // Professional blue
+  
+  // Background colors - Clean and professional
+  background: '#FFFFFF', // Pure white
+  backgroundSecondary: '#F8FAFC', // Very light gray
+  cardBackground: '#FFFFFF', // White cards
   
   // Text colors
-  text: '#FFFFFF', // White text for cards
-  textSecondary: '#B0B3B8', // Light gray for secondary text
+  text: '#1E293B', // Dark slate for primary text
+  textSecondary: '#64748B', // Medium slate for secondary text
+  textTertiary: '#94A3B8', // Light slate for tertiary text
   
   // Border colors
-  border: '#3A3B3F', // Slightly lighter than card background
+  border: '#E2E8F0', // Light border
+  borderDark: '#CBD5E1', // Darker border
   
   // Navigation colors
-  navigationBackground: '#0F0F10', // Charcoal for top nav/footer
+  navigationBackground: '#FFFFFF', // White navigation
+  tabBarBackground: '#FFFFFF', // White tab bar
   
   // Additional colors
-  card: '#2B2D31',
-  notification: '#FF3B30',
+  card: '#FFFFFF',
+  notification: '#EF4444',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  
+  // Shadows
+  shadowLight: 'rgba(0, 0, 0, 0.05)',
+  shadowMedium: 'rgba(0, 0, 0, 0.1)',
+  shadowDark: 'rgba(0, 0, 0, 0.15)',
 };
 
 export const darkColors = {
-  // Primary colors - Deep Orange for CTAs
-  primary: '#FF5722', // Deep Orange
-  secondary: '#FF7043', // Lighter Deep Orange
-  accent: '#00C853', // Contractor Green for highlights
-  highlight: '#FFD600', // Yellow for highlights
-  success: '#00C853', // Contractor Green
-  error: '#FF3B30',
-  warning: '#FFD600', // Safety Yellow
-  info: '#00C853',
+  // Primary colors - Deep Orange (consistent across themes)
+  primary: '#FF5722',
+  primaryLight: '#FF7043',
+  primaryDark: '#E64A19',
   
-  // Background colors - Gunmetal Gray / Soft Black
-  background: '#1A1A1D', // Soft Black
-  cardBackground: '#2B2D31', // Dark Gray for cards
+  // Secondary colors - Lighter slate for dark mode
+  secondary: '#64748B',
+  secondaryLight: '#94A3B8',
+  secondaryDark: '#475569',
+  
+  // Accent colors
+  accent: '#FF6B35',
+  accentLight: '#FF8C61',
+  
+  // Status colors
+  success: '#10B981',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  
+  // Background colors - Professional dark
+  background: '#0F172A', // Dark slate
+  backgroundSecondary: '#1E293B', // Lighter dark slate
+  cardBackground: '#1E293B', // Card background
   
   // Text colors
-  text: '#FFFFFF', // White text for cards
-  textSecondary: '#B0B3B8', // Light gray for secondary text
+  text: '#F1F5F9', // Light text
+  textSecondary: '#CBD5E1', // Medium light text
+  textTertiary: '#94A3B8', // Tertiary text
   
   // Border colors
-  border: '#3A3B3F', // Slightly lighter than card background
+  border: '#334155', // Dark border
+  borderDark: '#475569', // Darker border
   
   // Navigation colors
-  navigationBackground: '#0F0F10', // Charcoal for top nav/footer
+  navigationBackground: '#1E293B',
+  tabBarBackground: '#1E293B',
   
   // Additional colors
-  card: '#2B2D31',
-  notification: '#FF3B30',
+  card: '#1E293B',
+  notification: '#EF4444',
+  overlay: 'rgba(0, 0, 0, 0.7)',
+  
+  // Shadows
+  shadowLight: 'rgba(0, 0, 0, 0.2)',
+  shadowMedium: 'rgba(0, 0, 0, 0.3)',
+  shadowDark: 'rgba(0, 0, 0, 0.4)',
 };
 
 export const fieldColors = {
-  // Primary colors - High contrast for outdoor visibility
-  primary: '#FF5722', // Deep Orange
-  secondary: '#FF7043', // Lighter Deep Orange
-  accent: '#00C853', // Contractor Green for highlights
-  highlight: '#FFD600', // Yellow for highlights (high visibility)
-  success: '#00C853', // Contractor Green
-  error: '#FF1744',
-  warning: '#FFD600', // Safety Yellow (high visibility)
-  info: '#00C853',
+  // Primary colors - High contrast for outdoor
+  primary: '#FF5722',
+  primaryLight: '#FF7043',
+  primaryDark: '#E64A19',
   
-  // Background colors - Slightly lighter for outdoor visibility
-  background: '#2A2A2D', // Lighter gunmetal for better visibility
-  cardBackground: '#3B3D41', // Lighter dark gray
+  // Secondary colors
+  secondary: '#64748B',
+  secondaryLight: '#94A3B8',
+  secondaryDark: '#475569',
+  
+  // Accent colors - High visibility
+  accent: '#FF6B35',
+  accentLight: '#FF8C61',
+  
+  // Status colors - High contrast
+  success: '#10B981',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  
+  // Background colors - Slightly darker for outdoor visibility
+  background: '#F8FAFC',
+  backgroundSecondary: '#E2E8F0',
+  cardBackground: '#FFFFFF',
   
   // Text colors - High contrast
-  text: '#FFFFFF',
-  textSecondary: '#E0E0E0',
+  text: '#0F172A',
+  textSecondary: '#475569',
+  textTertiary: '#64748B',
   
   // Border colors
-  border: '#4A4B4F',
+  border: '#CBD5E1',
+  borderDark: '#94A3B8',
   
   // Navigation colors
-  navigationBackground: '#0F0F10', // Charcoal
+  navigationBackground: '#FFFFFF',
+  tabBarBackground: '#FFFFFF',
   
   // Additional colors
-  card: '#3B3D41',
-  notification: '#FF1744',
+  card: '#FFFFFF',
+  notification: '#EF4444',
+  overlay: 'rgba(0, 0, 0, 0.6)',
+  
+  // Shadows
+  shadowLight: 'rgba(0, 0, 0, 0.1)',
+  shadowMedium: 'rgba(0, 0, 0, 0.15)',
+  shadowDark: 'rgba(0, 0, 0, 0.2)',
 };
 
 export const spacing = {
@@ -106,13 +165,16 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
+  xxl: 48,
 };
 
 export const borderRadius = {
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  full: 9999,
 };
 
 export const typography = {
@@ -120,26 +182,39 @@ export const typography = {
     fontSize: 32,
     fontWeight: '700' as const,
     lineHeight: 40,
+    letterSpacing: -0.5,
   },
   h2: {
     fontSize: 24,
     fontWeight: '700' as const,
     lineHeight: 32,
+    letterSpacing: -0.3,
   },
   h3: {
     fontSize: 20,
     fontWeight: '600' as const,
     lineHeight: 28,
+    letterSpacing: -0.2,
   },
   body: {
     fontSize: 16,
     fontWeight: '400' as const,
     lineHeight: 24,
   },
+  bodyMedium: {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    lineHeight: 24,
+  },
   caption: {
     fontSize: 14,
     fontWeight: '400' as const,
     lineHeight: 20,
+  },
+  small: {
+    fontSize: 12,
+    fontWeight: '400' as const,
+    lineHeight: 16,
   },
 };
 

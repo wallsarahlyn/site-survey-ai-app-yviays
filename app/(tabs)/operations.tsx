@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { Job } from '@/types/contractor';
@@ -64,7 +64,7 @@ export default function OperationsScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled': return colors.info;
-      case 'in-progress': return colors.accent;
+      case 'in-progress': return colors.primary;
       case 'completed': return colors.success;
       case 'cancelled': return colors.error;
       default: return colors.textSecondary;
@@ -111,7 +111,7 @@ export default function OperationsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Operations</Text>
-          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.accent }]}>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]}>
             <IconSymbol
               ios_icon_name="plus"
               android_material_icon_name="add"
@@ -133,7 +133,10 @@ export default function OperationsScreen() {
               key={filter}
               style={[
                 styles.filterButton,
-                { backgroundColor: selectedFilter === filter ? colors.accent : colors.card }
+                { 
+                  backgroundColor: selectedFilter === filter ? colors.primary : colors.cardBackground,
+                  borderColor: selectedFilter === filter ? colors.primary : colors.border,
+                }
               ]}
               onPress={() => setSelectedFilter(filter)}
             >
@@ -152,7 +155,7 @@ export default function OperationsScreen() {
           {filteredJobs.map((job) => (
             <TouchableOpacity
               key={job.id}
-              style={[styles.jobCard, { backgroundColor: colors.card }]}
+              style={[styles.jobCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
             >
               {/* Priority Indicator */}
               <View style={[styles.priorityBar, { backgroundColor: getPriorityColor(job.priority) }]} />
@@ -165,7 +168,7 @@ export default function OperationsScreen() {
                     {job.address}
                   </Text>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(job.status) + '20' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(job.status) + '15' }]}>
                   <Text style={[styles.statusText, { color: getStatusColor(job.status) }]}>
                     {job.status.replace('-', ' ').toUpperCase()}
                   </Text>
@@ -205,7 +208,7 @@ export default function OperationsScreen() {
                     ios_icon_name="calendar"
                     android_material_icon_name="event"
                     size={18}
-                    color={colors.accent}
+                    color={colors.primary}
                   />
                   <Text style={[styles.scheduleText, { color: colors.text }]}>
                     {formatDate(job.scheduledDate)} at {formatTime(job.scheduledDate)}
@@ -216,7 +219,7 @@ export default function OperationsScreen() {
                     ios_icon_name="clock.fill"
                     android_material_icon_name="schedule"
                     size={18}
-                    color={colors.accent}
+                    color={colors.primary}
                   />
                   <Text style={[styles.scheduleText, { color: colors.text }]}>
                     {job.estimatedDuration} min
@@ -231,7 +234,7 @@ export default function OperationsScreen() {
                   <Text style={[styles.progressLabel, { color: colors.textSecondary }]}>
                     Checklist Progress
                   </Text>
-                  <Text style={[styles.progressCount, { color: colors.accent }]}>
+                  <Text style={[styles.progressCount, { color: colors.primary }]}>
                     {getChecklistProgress(job.checklist)}
                   </Text>
                 </View>
@@ -240,7 +243,7 @@ export default function OperationsScreen() {
                     style={[
                       styles.progressFill,
                       {
-                        backgroundColor: colors.accent,
+                        backgroundColor: colors.primary,
                         width: `${(job.checklist.filter(i => i.completed).length / job.checklist.length) * 100}%`
                       }
                     ]}
@@ -306,8 +309,20 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 4px 16px rgba(6, 182, 212, 0.3)',
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FF5722',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 4px 12px rgba(255, 87, 34, 0.3)',
+      },
+    }),
   },
   filterContainer: {
     marginBottom: 24,
@@ -320,8 +335,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 14,
-    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
-    elevation: 2,
+    borderWidth: 1,
   },
   filterText: {
     fontSize: 14,
@@ -334,9 +348,22 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     marginBottom: 16,
-    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
-    elevation: 4,
+    borderWidth: 1,
     position: 'relative',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadowLight,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: `0px 2px 12px ${colors.shadowLight}`,
+      },
+    }),
   },
   priorityBar: {
     position: 'absolute',

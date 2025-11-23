@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { QuickAction, RecentInspection, JobQueueItem } from '@/types/dashboard';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -30,7 +31,7 @@ export default function DashboardScreen() {
       subtitle: 'Create measurements',
       icon: 'pencil.and.ruler.fill',
       iconAndroid: 'architecture',
-      color: colors.highlight,
+      color: colors.accent,
       route: '/(tabs)/drawing',
     },
     {
@@ -167,17 +168,54 @@ export default function DashboardScreen() {
             <Text style={[styles.title, { color: colors.text }]}>InspectAI</Text>
           </View>
           <TouchableOpacity 
-            style={[styles.profileButton, { backgroundColor: colors.card }]}
+            style={[styles.profileButton, { backgroundColor: colors.cardBackground }]}
             onPress={() => router.push('/(tabs)/profile')}
           >
             <IconSymbol
               ios_icon_name="person.circle.fill"
               android_material_icon_name="account_circle"
               size={32}
-              color={colors.accent}
+              color={colors.primary}
             />
           </TouchableOpacity>
         </View>
+
+        {/* Purchase Reports Button */}
+        <TouchableOpacity
+          style={styles.purchaseReportsButton}
+          onPress={() => router.push('/(tabs)/landing')}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={[colors.primary, colors.accent]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.purchaseReportsGradient}
+          >
+            <View style={styles.purchaseReportsContent}>
+              <View style={styles.purchaseReportsIcon}>
+                <IconSymbol
+                  ios_icon_name="cart.fill"
+                  android_material_icon_name="shopping_cart"
+                  size={28}
+                  color="#FFFFFF"
+                />
+              </View>
+              <View style={styles.purchaseReportsText}>
+                <Text style={styles.purchaseReportsTitle}>Purchase Reports</Text>
+                <Text style={styles.purchaseReportsSubtitle}>
+                  Buy individual reports or bulk credits
+                </Text>
+              </View>
+              <IconSymbol
+                ios_icon_name="chevron.right"
+                android_material_icon_name="chevron_right"
+                size={24}
+                color="rgba(255, 255, 255, 0.8)"
+              />
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
 
         {/* Quick Actions */}
         <View style={styles.section}>
@@ -186,10 +224,10 @@ export default function DashboardScreen() {
             {quickActions.map((action) => (
               <TouchableOpacity
                 key={action.id}
-                style={[styles.quickActionCard, { backgroundColor: colors.card }]}
+                style={[styles.quickActionCard, { backgroundColor: colors.cardBackground }]}
                 onPress={() => router.push(action.route as any)}
               >
-                <View style={[styles.quickActionIcon, { backgroundColor: action.color + '20' }]}>
+                <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
                   <IconSymbol
                     ios_icon_name={action.icon}
                     android_material_icon_name={action.iconAndroid}
@@ -213,13 +251,13 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Inspections</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/(home)/inspection')}>
-              <Text style={[styles.seeAllText, { color: colors.accent }]}>See all</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
             </TouchableOpacity>
           </View>
           {recentInspections.map((inspection) => (
             <TouchableOpacity
               key={inspection.id}
-              style={[styles.inspectionCard, { backgroundColor: colors.card }]}
+              style={[styles.inspectionCard, { backgroundColor: colors.cardBackground }]}
             >
               <View style={styles.inspectionHeader}>
                 <View style={styles.inspectionInfo}>
@@ -230,7 +268,7 @@ export default function DashboardScreen() {
                     {formatTimeAgo(inspection.date)}
                   </Text>
                 </View>
-                <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(inspection.severity) + '20' }]}>
+                <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(inspection.severity) + '15' }]}>
                   <Text style={[styles.severityText, { color: getSeverityColor(inspection.severity) }]}>
                     {inspection.severity.toUpperCase()}
                   </Text>
@@ -248,7 +286,7 @@ export default function DashboardScreen() {
                     {inspection.imageCount} photos
                   </Text>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(inspection.status) + '20' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(inspection.status) + '15' }]}>
                   <Text style={[styles.statusText, { color: getStatusColor(inspection.status) }]}>
                     {inspection.status}
                   </Text>
@@ -263,13 +301,13 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Job Queue</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/operations')}>
-              <Text style={[styles.seeAllText, { color: colors.accent }]}>See all</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
             </TouchableOpacity>
           </View>
           {jobQueue.map((job) => (
             <TouchableOpacity
               key={job.id}
-              style={[styles.jobCard, { backgroundColor: colors.card }]}
+              style={[styles.jobCard, { backgroundColor: colors.cardBackground }]}
             >
               <View style={styles.jobHeader}>
                 <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(job.priority) }]} />
@@ -330,7 +368,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 32,
+    marginBottom: 20,
   },
   greeting: {
     fontSize: 16,
@@ -348,8 +386,73 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadowMedium,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: `0px 2px 8px ${colors.shadowMedium}`,
+      },
+    }),
+  },
+  purchaseReportsButton: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FF5722',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow: '0px 4px 16px rgba(255, 87, 34, 0.25)',
+      },
+    }),
+  },
+  purchaseReportsGradient: {
+    padding: 20,
+  },
+  purchaseReportsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  purchaseReportsIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  purchaseReportsText: {
+    flex: 1,
+  },
+  purchaseReportsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    letterSpacing: -0.3,
+  },
+  purchaseReportsSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
   },
   section: {
     paddingHorizontal: 20,
@@ -380,8 +483,22 @@ const createStyles = (colors: any) => StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     alignItems: 'center',
-    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadowLight,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: `0px 2px 12px ${colors.shadowLight}`,
+      },
+    }),
   },
   quickActionIcon: {
     width: 60,
@@ -405,8 +522,22 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     marginBottom: 12,
-    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadowLight,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: `0px 2px 12px ${colors.shadowLight}`,
+      },
+    }),
   },
   inspectionHeader: {
     flexDirection: 'row',
@@ -460,8 +591,22 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     marginBottom: 12,
-    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.06)',
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadowLight,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: `0px 2px 12px ${colors.shadowLight}`,
+      },
+    }),
   },
   jobHeader: {
     flexDirection: 'row',

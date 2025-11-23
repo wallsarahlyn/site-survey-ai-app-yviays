@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Dimensions,
   Platform,
 } from 'react-native';
@@ -57,8 +56,8 @@ interface FAQItemProps {
 }
 
 export default function LandingPage() {
-  const { theme: themeMode } = useTheme();
-  const colors = getTheme(themeMode);
+  const { mode } = useTheme();
+  const colors = getTheme(mode);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
 
   const handleBuyReport = (reportType: string) => {
@@ -91,16 +90,16 @@ export default function LandingPage() {
         style={styles.heroSection}
       >
         <View style={styles.heroContent}>
-          <Text style={[styles.heroHeadline, { color: '#FFFFFF' }]}>
+          <Text style={styles.heroHeadline}>
             AI-Powered Roof & Solar Inspection Reports in Minutes
           </Text>
-          <Text style={[styles.heroSubheadline, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+          <Text style={styles.heroSubheadline}>
             Upload site photos, let the AI analyze everything, and download professional reports ready for roofing, solar, and insurance work.
           </Text>
           
           <View style={styles.heroButtons}>
             <TouchableOpacity
-              style={[styles.primaryButton, { backgroundColor: '#FFFFFF' }]}
+              style={styles.primaryButton}
               onPress={() => handleBuyReport('any')}
             >
               <Text style={[styles.primaryButtonText, { color: colors.primary }]}>
@@ -109,28 +108,28 @@ export default function LandingPage() {
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.secondaryButton, { borderColor: '#FFFFFF' }]}
+              style={styles.secondaryButton}
               onPress={handleSeeSample}
             >
-              <Text style={[styles.secondaryButtonText, { color: '#FFFFFF' }]}>
+              <Text style={styles.secondaryButtonText}>
                 See Sample Report
               </Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.heroFootnote, { color: 'rgba(255, 255, 255, 0.8)' }]}>
+          <Text style={styles.heroFootnote}>
             No subscription required. Pay per report or save with bulk credits.
           </Text>
 
           {/* Mockup Visual */}
-          <View style={[styles.mockupContainer, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}>
+          <View style={styles.mockupContainer}>
             <IconSymbol
               ios_icon_name="doc.text.fill"
               android_material_icon_name="description"
               size={80}
-              color="rgba(255, 255, 255, 0.8)"
+              color="rgba(255, 255, 255, 0.9)"
             />
-            <Text style={[styles.mockupText, { color: 'rgba(255, 255, 255, 0.7)' }]}>
+            <Text style={styles.mockupText}>
               Professional PDF Report Preview
             </Text>
           </View>
@@ -138,7 +137,7 @@ export default function LandingPage() {
       </LinearGradient>
 
       {/* How It Works Section */}
-      <View style={[styles.section, { backgroundColor: colors.background }]}>
+      <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           How It Works
         </Text>
@@ -166,7 +165,7 @@ export default function LandingPage() {
       </View>
 
       {/* Report Types & Pricing Section */}
-      <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+      <View style={[styles.section, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Choose the Report You Need
         </Text>
@@ -220,7 +219,7 @@ export default function LandingPage() {
       </View>
 
       {/* Bulk Pricing Section */}
-      <View style={[styles.section, { backgroundColor: colors.background }]}>
+      <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Save with Bulk Report Credits
         </Text>
@@ -270,7 +269,7 @@ export default function LandingPage() {
       </View>
 
       {/* Who It's For Section */}
-      <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+      <View style={[styles.section, { backgroundColor: colors.background }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Who It&apos;s For
         </Text>
@@ -295,7 +294,7 @@ export default function LandingPage() {
       </View>
 
       {/* FAQ Section */}
-      <View style={[styles.section, { backgroundColor: colors.background }]}>
+      <View style={[styles.section, { backgroundColor: colors.backgroundSecondary }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Frequently Asked Questions
         </Text>
@@ -333,15 +332,15 @@ export default function LandingPage() {
         colors={[colors.primary, colors.accent]}
         style={styles.ctaSection}
       >
-        <Text style={[styles.ctaHeadline, { color: '#FFFFFF' }]}>
+        <Text style={styles.ctaHeadline}>
           Ready to Try AI-Powered Site Surveys?
         </Text>
-        <Text style={[styles.ctaSubheadline, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+        <Text style={styles.ctaSubheadline}>
           Buy a single report or save with bulk credits—no contracts required.
         </Text>
         
         <TouchableOpacity
-          style={[styles.ctaButton, { backgroundColor: '#FFFFFF' }]}
+          style={styles.ctaButton}
           onPress={() => handleBuyReport('any')}
         >
           <Text style={[styles.ctaButtonText, { color: colors.primary }]}>
@@ -358,11 +357,11 @@ export default function LandingPage() {
 
 // Step Card Component
 function StepCard({ stepNumber, title, description, icon }: StepCardProps) {
-  const { theme: themeMode } = useTheme();
-  const colors = getTheme(themeMode);
+  const { mode } = useTheme();
+  const colors = getTheme(mode);
 
   return (
-    <View style={[styles.stepCard, { backgroundColor: colors.card }]}>
+    <View style={[styles.stepCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       <View style={[styles.stepNumberBadge, { backgroundColor: colors.primary }]}>
         <Text style={styles.stepNumberText}>{stepNumber}</Text>
       </View>
@@ -390,13 +389,13 @@ function PricingCard({
   isPopular,
   onPress,
 }: PricingCardProps) {
-  const { theme: themeMode } = useTheme();
-  const colors = getTheme(themeMode);
+  const { mode } = useTheme();
+  const colors = getTheme(mode);
 
   return (
     <View style={[
       styles.pricingCard,
-      { backgroundColor: colors.card, borderColor: isPopular ? colors.primary : colors.border },
+      { backgroundColor: colors.cardBackground, borderColor: isPopular ? colors.primary : colors.border },
       isPopular && styles.popularCard,
     ]}>
       {isPopular && (
@@ -414,12 +413,12 @@ function PricingCard({
       <View style={styles.featuresContainer}>
         {features.map((feature, index) => (
           <React.Fragment key={index}>
-          <View key={index} style={styles.featureRow}>
+          <View style={styles.featureRow}>
             <IconSymbol
               ios_icon_name="checkmark.circle.fill"
-              android_material_icon_name="check-circle"
+              android_material_icon_name="check_circle"
               size={20}
-              color={colors.success}
+              color={colors.primary}
             />
             <Text style={[styles.featureText, { color: colors.text }]}>{feature}</Text>
           </View>
@@ -446,12 +445,12 @@ function BulkPackCard({
   description,
   onPress,
 }: BulkPackCardProps) {
-  const { theme: themeMode } = useTheme();
-  const colors = getTheme(themeMode);
+  const { mode } = useTheme();
+  const colors = getTheme(mode);
 
   return (
     <TouchableOpacity
-      style={[styles.bulkPackCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+      style={[styles.bulkPackCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -470,12 +469,12 @@ function BulkPackCard({
 
 // Who It's For Card Component
 function WhoItsForCard({ title, description, icon }: WhoItsForCardProps) {
-  const { theme: themeMode } = useTheme();
-  const colors = getTheme(themeMode);
+  const { mode } = useTheme();
+  const colors = getTheme(mode);
 
   return (
-    <View style={[styles.whoItsForCard, { backgroundColor: colors.card }]}>
-      <View style={[styles.whoItsForIconContainer, { backgroundColor: `${colors.primary}20` }]}>
+    <View style={[styles.whoItsForCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+      <View style={[styles.whoItsForIconContainer, { backgroundColor: `${colors.primary}15` }]}>
         <IconSymbol
           ios_icon_name={icon}
           android_material_icon_name={icon}
@@ -493,12 +492,12 @@ function WhoItsForCard({ title, description, icon }: WhoItsForCardProps) {
 
 // FAQ Item Component
 function FAQItem({ question, answer, isExpanded, onToggle }: FAQItemProps & { isExpanded: boolean; onToggle: () => void }) {
-  const { theme: themeMode } = useTheme();
-  const colors = getTheme(themeMode);
+  const { mode } = useTheme();
+  const colors = getTheme(mode);
 
   return (
     <TouchableOpacity
-      style={[styles.faqItem, { backgroundColor: colors.card, borderColor: colors.border }]}
+      style={[styles.faqItem, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
       onPress={onToggle}
       activeOpacity={0.7}
     >
@@ -506,7 +505,7 @@ function FAQItem({ question, answer, isExpanded, onToggle }: FAQItemProps & { is
         <Text style={[styles.faqQuestion, { color: colors.text }]}>{question}</Text>
         <IconSymbol
           ios_icon_name={isExpanded ? 'chevron.up' : 'chevron.down'}
-          android_material_icon_name={isExpanded ? 'expand-less' : 'expand-more'}
+          android_material_icon_name={isExpanded ? 'expand_less' : 'expand_more'}
           size={24}
           color={colors.textSecondary}
         />
@@ -540,6 +539,7 @@ const styles = StyleSheet.create({
     fontSize: isMobile ? 28 : 40,
     textAlign: 'center',
     marginBottom: spacing.md,
+    color: '#FFFFFF',
   },
   heroSubheadline: {
     ...typography.body,
@@ -547,6 +547,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.xl,
     lineHeight: 26,
+    color: 'rgba(255, 255, 255, 0.95)',
   },
   heroButtons: {
     flexDirection: isMobile ? 'column' : 'row',
@@ -563,11 +564,12 @@ const styles = StyleSheet.create({
     flex: isMobile ? 0 : 1,
     minHeight: 50,
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   primaryButtonText: {
-    ...typography.body,
-    fontWeight: '600',
+    ...typography.bodyMedium,
     fontSize: 16,
+    fontWeight: '600',
   },
   secondaryButton: {
     paddingVertical: spacing.md,
@@ -575,19 +577,22 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     borderWidth: 2,
+    borderColor: '#FFFFFF',
     flex: isMobile ? 0 : 1,
     minHeight: 50,
     justifyContent: 'center',
   },
   secondaryButtonText: {
-    ...typography.body,
-    fontWeight: '600',
+    ...typography.bodyMedium,
     fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   heroFootnote: {
     ...typography.caption,
     textAlign: 'center',
     marginBottom: spacing.xl,
+    color: 'rgba(255, 255, 255, 0.85)',
   },
   mockupContainer: {
     width: '100%',
@@ -597,10 +602,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   mockupText: {
     ...typography.body,
     marginTop: spacing.md,
+    color: 'rgba(255, 255, 255, 0.85)',
   },
   
   // Section Styles
@@ -634,6 +641,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     alignItems: 'center',
     minHeight: 280,
+    borderWidth: 1,
   },
   stepNumberBadge: {
     width: 40,
@@ -799,6 +807,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     alignItems: 'center',
     minHeight: 220,
+    borderWidth: 1,
   },
   whoItsForIconContainer: {
     width: 80,
@@ -858,6 +867,7 @@ const styles = StyleSheet.create({
     fontSize: isMobile ? 24 : 32,
     textAlign: 'center',
     marginBottom: spacing.md,
+    color: '#FFFFFF',
   },
   ctaSubheadline: {
     ...typography.body,
@@ -865,6 +875,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.xl,
     maxWidth: 600,
+    color: 'rgba(255, 255, 255, 0.95)',
   },
   ctaButton: {
     paddingVertical: spacing.md,
@@ -872,6 +883,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     minWidth: 200,
+    backgroundColor: '#FFFFFF',
   },
   ctaButtonText: {
     fontSize: 18,

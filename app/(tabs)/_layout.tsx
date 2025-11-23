@@ -9,31 +9,25 @@ export default function TabLayout() {
     {
       name: '(home)',
       route: '/(tabs)/(home)/dashboard',
-      icon: 'house',
-      label: 'Dashboard',
-    },
-    {
-      name: 'landing',
-      route: '/(tabs)/landing',
-      icon: 'storefront',
-      label: 'Store',
+      icon: 'home',
+      label: 'Home',
     },
     {
       name: 'drawing',
       route: '/(tabs)/drawing',
-      icon: 'pencil',
+      icon: 'edit',
       label: 'Drawing',
     },
     {
       name: 'operations',
       route: '/(tabs)/operations',
-      icon: 'wrench',
+      icon: 'construction',
       label: 'Operations',
     },
     {
       name: 'profile',
       route: '/(tabs)/profile',
-      icon: 'person',
+      icon: 'settings',
       label: 'Settings',
     },
   ];
