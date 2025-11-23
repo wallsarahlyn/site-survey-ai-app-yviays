@@ -4,17 +4,21 @@ import { InspectionReport } from '@/types/inspection';
 import { HistoricalAnalysis } from '@/types/historicalData';
 
 /**
- * Save an inspection to the database
+ * Save an inspection report to the Supabase database
+ * @param report - The inspection report to save
+ * @returns The ID of the saved inspection, or null if failed
  */
 export async function saveInspection(report: InspectionReport): Promise<string | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      throw new Error('User must be authenticated to save inspection');
+      console.error('User not authenticated');
+      return null;
     }
 
-    const { data, error } = await supabase
+    // Insert the inspection
+    const { data: inspection, error: inspectionError } = await supabase
       .from('inspections')
       .insert({
         user_id: user.id,
@@ -24,36 +28,64 @@ export async function saveInspection(report: InspectionReport): Promise<string |
         ai_analysis: report.aiAnalysis,
         quote: report.quote,
         roof_diagram: report.roofDiagram,
-        notes: report.notes || '',
+        notes: report.notes,
       })
-      .select('id')
+      .select()
       .single();
 
-    if (error) {
-      console.error('Error saving inspection:', error);
-      throw error;
+    if (inspectionError) {
+      console.error('Error saving inspection:', inspectionError);
+      return null;
     }
 
-    console.log('Inspection saved successfully:', data.id);
-    return data.id;
+    console.log('Inspection saved successfully:', inspection.id);
+
+    // Save images if any
+    if (report.images && report.images.length > 0) {
+      const imageInserts = report.images.map(img => ({
+        inspection_id: inspection.id,
+        file_name: img.fileName,
+        file_path: img.uri,
+        width: img.width,
+        height: img.height,
+        uploaded_at: img.uploadedAt.toISOString(),
+      }));
+
+      const { error: imagesError } = await supabase
+        .from('inspection_images')
+        .insert(imageInserts);
+
+      if (imagesError) {
+        console.error('Error saving images:', imagesError);
+        // Don't fail the whole operation if images fail
+      } else {
+        console.log('Images saved successfully');
+      }
+    }
+
+    return inspection.id;
   } catch (error) {
-    console.error('Failed to save inspection:', error);
+    console.error('Error in saveInspection:', error);
     return null;
   }
 }
 
 /**
- * Save historical analysis to the database
+ * Save a historical analysis to the Supabase database
+ * @param analysis - The historical analysis to save
+ * @returns The ID of the saved analysis, or null if failed
  */
 export async function saveHistoricalAnalysis(analysis: HistoricalAnalysis): Promise<string | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      throw new Error('User must be authenticated to save historical analysis');
+      console.error('User not authenticated');
+      return null;
     }
 
-    const { data, error } = await supabase
+    // Insert the historical analysis
+    const { data: savedAnalysis, error: analysisError } = await supabase
       .from('historical_analyses')
       .insert({
         user_id: user.id,
@@ -70,174 +102,151 @@ export async function saveHistoricalAnalysis(analysis: HistoricalAnalysis): Prom
         data_sources_used: analysis.dataSourcesUsed,
         analyzed_at: analysis.analyzedAt.toISOString(),
       })
-      .select('id')
+      .select()
       .single();
 
-    if (error) {
-      console.error('Error saving historical analysis:', error);
-      throw error;
+    if (analysisError) {
+      console.error('Error saving historical analysis:', analysisError);
+      return null;
     }
 
-    console.log('Historical analysis saved successfully:', data.id);
-    return data.id;
+    console.log('Historical analysis saved successfully:', savedAnalysis.id);
+    return savedAnalysis.id;
   } catch (error) {
-    console.error('Failed to save historical analysis:', error);
+    console.error('Error in saveHistoricalAnalysis:', error);
     return null;
   }
 }
 
 /**
- * Get user's inspections
+ * Fetch an inspection report from the database
+ * @param inspectionId - The ID of the inspection to fetch
+ * @returns The inspection report, or null if not found
  */
-export async function getUserInspections(limit: number = 10) {
+export async function fetchInspection(inspectionId: string): Promise<InspectionReport | null> {
+  try {
+    const { data: inspection, error } = await supabase
+      .from('inspections')
+      .select('*, inspection_images(*)')
+      .eq('id', inspectionId)
+      .single();
+
+    if (error || !inspection) {
+      console.error('Error fetching inspection:', error);
+      return null;
+    }
+
+    // Transform database format to InspectionReport format
+    const report: InspectionReport = {
+      id: inspection.id,
+      propertyAddress: inspection.property_address,
+      inspectionDate: new Date(inspection.inspection_date),
+      images: inspection.inspection_images?.map((img: any) => ({
+        id: img.id,
+        uri: img.file_path,
+        width: img.width,
+        height: img.height,
+        fileName: img.file_name,
+        uploadedAt: new Date(img.uploaded_at),
+      })) || [],
+      aiAnalysis: inspection.ai_analysis,
+      roofDiagram: inspection.roof_diagram,
+      quote: inspection.quote,
+      notes: inspection.notes || '',
+    };
+
+    return report;
+  } catch (error) {
+    console.error('Error in fetchInspection:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch a historical analysis from the database
+ * @param analysisId - The ID of the analysis to fetch
+ * @returns The historical analysis, or null if not found
+ */
+export async function fetchHistoricalAnalysis(analysisId: string): Promise<HistoricalAnalysis | null> {
+  try {
+    const { data: analysis, error } = await supabase
+      .from('historical_analyses')
+      .select('*')
+      .eq('id', analysisId)
+      .single();
+
+    if (error || !analysis) {
+      console.error('Error fetching historical analysis:', error);
+      return null;
+    }
+
+    // Transform database format to HistoricalAnalysis format
+    const historicalAnalysis: HistoricalAnalysis = {
+      id: analysis.id,
+      address: analysis.address,
+      coordinates: analysis.coordinates,
+      stormEvents: analysis.storm_events,
+      fireRisk: analysis.fire_risk,
+      floodRisk: analysis.flood_risk,
+      insuranceClaims: analysis.insurance_claims,
+      weatherPatterns: analysis.weather_patterns,
+      roofAgePatterns: analysis.roof_age_patterns,
+      riskScores: analysis.risk_scores,
+      aiSummary: analysis.ai_summary,
+      dataSourcesUsed: analysis.data_sources_used,
+      analyzedAt: new Date(analysis.analyzed_at),
+    };
+
+    return historicalAnalysis;
+  } catch (error) {
+    console.error('Error in fetchHistoricalAnalysis:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch all inspections for the current user
+ * @returns Array of inspection reports
+ */
+export async function fetchUserInspections(): Promise<InspectionReport[]> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      throw new Error('User must be authenticated');
+      console.error('User not authenticated');
+      return [];
     }
 
-    const { data, error } = await supabase
+    const { data: inspections, error } = await supabase
       .from('inspections')
-      .select('*')
+      .select('*, inspection_images(*)')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(limit);
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching inspections:', error);
-      throw error;
+      return [];
     }
 
-    return data;
+    return inspections.map((inspection: any) => ({
+      id: inspection.id,
+      propertyAddress: inspection.property_address,
+      inspectionDate: new Date(inspection.inspection_date),
+      images: inspection.inspection_images?.map((img: any) => ({
+        id: img.id,
+        uri: img.file_path,
+        width: img.width,
+        height: img.height,
+        fileName: img.file_name,
+        uploadedAt: new Date(img.uploaded_at),
+      })) || [],
+      aiAnalysis: inspection.ai_analysis,
+      roofDiagram: inspection.roof_diagram,
+      quote: inspection.quote,
+      notes: inspection.notes || '',
+    }));
   } catch (error) {
-    console.error('Failed to fetch inspections:', error);
+    console.error('Error in fetchUserInspections:', error);
     return [];
-  }
-}
-
-/**
- * Get user's historical analyses
- */
-export async function getUserHistoricalAnalyses(limit: number = 10) {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated');
-    }
-
-    const { data, error } = await supabase
-      .from('historical_analyses')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      console.error('Error fetching historical analyses:', error);
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch historical analyses:', error);
-    return [];
-  }
-}
-
-/**
- * Delete an inspection
- */
-export async function deleteInspection(inspectionId: string): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('inspections')
-      .delete()
-      .eq('id', inspectionId);
-
-    if (error) {
-      console.error('Error deleting inspection:', error);
-      throw error;
-    }
-
-    console.log('Inspection deleted successfully');
-    return true;
-  } catch (error) {
-    console.error('Failed to delete inspection:', error);
-    return false;
-  }
-}
-
-/**
- * Upload image to Supabase Storage
- */
-export async function uploadImageToStorage(
-  uri: string,
-  fileName: string,
-  bucket: string = 'inspection-images'
-): Promise<string | null> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to upload images');
-    }
-
-    // Fetch the image as a blob
-    const response = await fetch(uri);
-    const blob = await response.blob();
-
-    // Create a unique file path
-    const filePath = `${user.id}/${Date.now()}-${fileName}`;
-
-    // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, blob, {
-        contentType: 'image/jpeg',
-        upsert: false,
-      });
-
-    if (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath);
-
-    console.log('Image uploaded successfully:', urlData.publicUrl);
-    return urlData.publicUrl;
-  } catch (error) {
-    console.error('Failed to upload image:', error);
-    return null;
-  }
-}
-
-/**
- * Convert image URI to base64
- */
-export async function convertImageToBase64(uri: string): Promise<string | null> {
-  try {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        // Remove the data:image/jpeg;base64, prefix
-        const base64Data = base64.split(',')[1];
-        resolve(base64Data);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error('Failed to convert image to base64:', error);
-    return null;
   }
 }

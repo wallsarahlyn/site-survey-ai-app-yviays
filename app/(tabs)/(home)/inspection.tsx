@@ -44,6 +44,7 @@ export default function InspectionScreen() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [savedInspectionId, setSavedInspectionId] = useState<string | null>(null);
 
   // Check authentication status on mount
   React.useEffect(() => {
@@ -129,9 +130,10 @@ export default function InspectionScreen() {
       const inspectionId = await saveInspection(report);
       
       if (inspectionId) {
+        setSavedInspectionId(inspectionId);
         Alert.alert(
           'Inspection Saved',
-          'Your inspection has been saved to your account!',
+          'Your inspection has been saved to your account! You can now generate a full PDF report.',
           [{ text: 'OK' }]
         );
       } else {
@@ -155,11 +157,20 @@ export default function InspectionScreen() {
       return;
     }
 
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Authentication Required',
+        'You need to be signed in to generate PDF reports. Please sign in from the Profile tab.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     setIsGeneratingPDF(true);
 
     try {
       const report: InspectionReport = {
-        id: `INS-${Date.now()}`,
+        id: savedInspectionId || `INS-${Date.now()}`,
         propertyAddress: propertyAddress || 'Unknown Address',
         inspectionDate: new Date(),
         images,
@@ -169,18 +180,19 @@ export default function InspectionScreen() {
         notes: '',
       };
 
-      await generateInspectionPDF(report);
+      console.log('Generating full PDF report from inspection data...');
+      await generateInspectionPDF(report, savedInspectionId || undefined);
       
       Alert.alert(
         'PDF Generated',
-        'Your inspection report has been generated and is ready to share!',
+        'Your complete inspection report has been generated and is ready to share!',
         [{ text: 'OK' }]
       );
     } catch (error) {
       console.error('PDF generation error:', error);
       Alert.alert(
         'PDF Error',
-        'Failed to generate PDF. Please try again.',
+        error instanceof Error ? error.message : 'Failed to generate PDF. Please try again.',
         [{ text: 'OK' }]
       );
     } finally {
@@ -199,6 +211,7 @@ export default function InspectionScreen() {
           style: 'destructive',
           onPress: () => {
             resetInspection();
+            setSavedInspectionId(null);
             Alert.alert('Reset Complete', 'You can now start a new inspection.');
           },
         },
@@ -224,7 +237,7 @@ export default function InspectionScreen() {
           <View style={[styles.warningCard, { backgroundColor: colors.cardBackground, borderColor: colors.warning }]}>
             <Text style={[styles.warningTitle, { color: colors.warning }]}>⚠️ Sign In Required</Text>
             <Text style={[styles.warningText, { color: colors.textSecondary }]}>
-              AI analysis requires authentication. Please sign in from the Profile tab to use this feature.
+              AI analysis and PDF generation require authentication. Please sign in from the Profile tab to use these features.
             </Text>
           </View>
         )}
@@ -325,33 +338,60 @@ export default function InspectionScreen() {
               </View>
             )}
 
+            <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
+              <View style={styles.infoCardHeader}>
+                <IconSymbol ios_icon_name="doc.text.fill" android_material_icon_name="description" size={24} color={colors.primary} />
+                <Text style={[styles.infoTitle, { color: colors.text }]}>Server-Side PDF Generation</Text>
+              </View>
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                Your PDF report will be generated server-side from the inspection data, ensuring a complete, 
+                structured report with all sections properly formatted.
+              </Text>
+              <Text style={[styles.infoHighlight, { color: colors.primary }]}>
+                ✓ Multi-page report with cover page, analysis, measurements, quotes, and disclaimers
+              </Text>
+            </View>
+
             <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.success }]}
-                onPress={handleSaveInspection}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <>
-                    <IconSymbol ios_icon_name="square.and.arrow.down.fill" android_material_icon_name="save" size={20} color="#FFFFFF" />
-                    <Text style={styles.actionButtonText}>Save Inspection</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              {!savedInspectionId && (
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: colors.success }]}
+                  onPress={handleSaveInspection}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <IconSymbol ios_icon_name="square.and.arrow.down.fill" android_material_icon_name="save" size={20} color="#FFFFFF" />
+                      <Text style={styles.actionButtonText}>Save Inspection</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              {savedInspectionId && (
+                <View style={[styles.infoCard, { backgroundColor: colors.cardBackground, borderColor: colors.success }]}>
+                  <View style={styles.infoCardHeader}>
+                    <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check_circle" size={20} color={colors.success} />
+                    <Text style={[styles.infoText, { color: colors.success }]}>Inspection Saved</Text>
+                  </View>
+                </View>
+              )}
 
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: colors.primary }]}
                 onPress={handleGeneratePDF}
-                disabled={isGeneratingPDF}
+                disabled={isGeneratingPDF || !isAuthenticated}
               >
                 {isGeneratingPDF ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
                     <IconSymbol ios_icon_name="doc.text.fill" android_material_icon_name="description" size={20} color="#FFFFFF" />
-                    <Text style={styles.actionButtonText}>Generate PDF Report</Text>
+                    <Text style={styles.actionButtonText}>
+                      {isAuthenticated ? 'Download Full PDF Report' : 'Sign In to Generate PDF'}
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -508,6 +548,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     marginBottom: 8,
+    lineHeight: 20,
   },
   infoHighlight: {
     fontSize: 14,
