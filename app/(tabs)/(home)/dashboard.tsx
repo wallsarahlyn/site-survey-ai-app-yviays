@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from
 import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useThemeContext } from '@/contexts/ThemeContext';
-import { QuickAction, RecentInspection, JobQueueItem, SalesPipelineStage } from '@/types/dashboard';
+import { QuickAction, RecentInspection, JobQueueItem } from '@/types/dashboard';
 
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -44,12 +44,12 @@ export default function DashboardScreen() {
     },
     {
       id: '4',
-      title: 'CRM',
-      subtitle: 'Manage leads',
-      icon: 'person.2.fill',
-      iconAndroid: 'people',
-      color: colors.info,
-      route: '/(tabs)/crm',
+      title: 'Operations',
+      subtitle: 'Manage jobs',
+      icon: 'wrench.and.screwdriver.fill',
+      iconAndroid: 'build',
+      color: colors.warning,
+      route: '/(tabs)/operations',
     },
   ];
 
@@ -99,13 +99,6 @@ export default function DashboardScreen() {
       priority: 'medium',
       assignedTo: 'Sarah Johnson',
     },
-  ];
-
-  const pipelineStages: SalesPipelineStage[] = [
-    { id: '1', name: 'Leads', count: 24, value: 180000, color: colors.info },
-    { id: '2', name: 'Qualified', count: 12, value: 95000, color: colors.primary },
-    { id: '3', name: 'Proposal', count: 8, value: 72000, color: colors.warning },
-    { id: '4', name: 'Negotiation', count: 4, value: 48000, color: colors.success },
   ];
 
   const getSeverityColor = (severity: string) => {
@@ -211,34 +204,6 @@ export default function DashboardScreen() {
                   {action.subtitle}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Sales Pipeline Summary */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Sales Pipeline</Text>
-          <View style={[styles.pipelineCard, { backgroundColor: colors.card }]}>
-            {pipelineStages.map((stage, index) => (
-              <React.Fragment key={stage.id}>
-                <View style={styles.pipelineStage}>
-                  <View style={styles.pipelineStageHeader}>
-                    <View style={[styles.pipelineDot, { backgroundColor: stage.color }]} />
-                    <Text style={[styles.pipelineStageName, { color: colors.text }]}>
-                      {stage.name}
-                    </Text>
-                  </View>
-                  <Text style={[styles.pipelineCount, { color: colors.textSecondary }]}>
-                    {stage.count} deals
-                  </Text>
-                  <Text style={[styles.pipelineValue, { color: colors.text }]}>
-                    ${(stage.value / 1000).toFixed(0)}K
-                  </Text>
-                </View>
-                {index < pipelineStages.length - 1 && (
-                  <View style={[styles.pipelineDivider, { backgroundColor: colors.border }]} />
-                )}
-              </React.Fragment>
             ))}
           </View>
         </View>
@@ -433,42 +398,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   quickActionSubtitle: {
     fontSize: 12,
     textAlign: 'center',
-  },
-  pipelineCard: {
-    borderRadius: 16,
-    padding: 20,
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-    elevation: 3,
-  },
-  pipelineStage: {
-    paddingVertical: 12,
-  },
-  pipelineStageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  pipelineDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  pipelineStageName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  pipelineCount: {
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  pipelineValue: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  pipelineDivider: {
-    height: 1,
-    marginVertical: 8,
   },
   inspectionCard: {
     borderRadius: 16,

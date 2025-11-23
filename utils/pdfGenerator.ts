@@ -593,6 +593,27 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
             color: #757575;
             margin: 4px 0;
           }
+
+          .highlight-box {
+            background: #E3F2FD;
+            border-left: 4px solid #2563EB;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+          }
+          
+          .highlight-title {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #212121;
+            margin-bottom: 10px;
+          }
+          
+          .highlight-text {
+            font-size: 10pt;
+            color: #424242;
+            line-height: 1.6;
+          }
         </style>
       </head>
       <body>
@@ -800,7 +821,7 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
         <div class="page">
           <div class="page-header">
             <h1>Roof Measurements & Diagram</h1>
-            <div class="report-id">Detailed Facet Analysis</div>
+            <div class="report-id">Detailed Facet Analysis from Advanced Aerial Imagery</div>
           </div>
 
           <div class="section">
@@ -820,6 +841,15 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
               <div class="info-card">
                 <div class="info-card-label">Diagram Created</div>
                 <div class="info-card-value">${report.roofDiagram.createdAt.toLocaleDateString()}</div>
+              </div>
+            </div>
+
+            <div class="highlight-box">
+              <div class="highlight-title">📐 Measurement Method</div>
+              <div class="highlight-text">
+                All roof measurements were derived from advanced aerial imagery analysis using precise polygon mapping 
+                techniques. Each facet has been individually measured for area, dimensions, pitch, and perimeter with 
+                a scale of 10 pixels per foot for accurate calculations.
               </div>
             </div>
 
@@ -1035,15 +1065,16 @@ export async function generateInspectionPDF(report: InspectionReport): Promise<v
             <div class="disclaimer-box">
               <div class="disclaimer-title">Important Notice</div>
               <p class="disclaimer-text">
-                This inspection report is generated using advanced AI-powered analysis technology and is intended 
-                to provide preliminary assessment information. While our AI systems are highly accurate, this report 
-                should not replace a comprehensive on-site inspection by a licensed professional.
+                This inspection report is generated using advanced AI-powered analysis technology and includes 
+                roof measurements derived from advanced aerial imagery. While our AI systems and measurement tools 
+                are highly accurate, this report should not replace a comprehensive on-site inspection by a licensed professional.
               </p>
             </div>
 
             <h3 class="section-subheader">Terms & Conditions</h3>
             <ul class="bullet-list" style="font-size: 9pt;">
               <li>All estimates are preliminary and subject to change based on detailed on-site inspection</li>
+              <li>Roof measurements are derived from advanced aerial imagery with a 10:1 pixel-to-foot scale</li>
               <li>AI analysis confidence levels are provided for transparency and should be considered when making decisions</li>
               <li>Actual costs may vary based on material selection, labor rates, and unforeseen conditions</li>
               <li>This report is valid for 30 days from the date of generation</li>

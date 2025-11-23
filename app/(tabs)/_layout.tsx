@@ -19,12 +19,6 @@ export default function TabLayout() {
       label: 'Drawing',
     },
     {
-      name: 'crm',
-      route: '/(tabs)/crm',
-      icon: 'person-2',
-      label: 'CRM',
-    },
-    {
       name: 'operations',
       route: '/(tabs)/operations',
       icon: 'wrench',
@@ -48,7 +42,6 @@ export default function TabLayout() {
       >
         <Stack.Screen key="home" name="(home)" />
         <Stack.Screen key="drawing" name="drawing" />
-        <Stack.Screen key="crm" name="crm" />
         <Stack.Screen key="estimator" name="estimator" />
         <Stack.Screen key="operations" name="operations" />
         <Stack.Screen key="insurance" name="insurance" />
