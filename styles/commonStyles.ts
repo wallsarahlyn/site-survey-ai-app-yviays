@@ -1,4 +1,6 @@
 
+export type ThemeMode = 'light' | 'dark' | 'field';
+
 export const colors = {
   // Primary colors
   primary: '#2563EB',
@@ -47,6 +49,30 @@ export const darkColors = {
   notification: '#EF4444',
 };
 
+export const fieldColors = {
+  // Primary colors - High contrast for outdoor visibility
+  primary: '#FF6B00',
+  secondary: '#00C853',
+  success: '#00C853',
+  error: '#FF1744',
+  warning: '#FFD600',
+  
+  // Background colors - Slightly tinted for reduced glare
+  background: '#F5F5DC',
+  cardBackground: '#FFFFFF',
+  
+  // Text colors - High contrast
+  text: '#000000',
+  textSecondary: '#424242',
+  
+  // Border colors
+  border: '#BDBDBD',
+  
+  // Additional colors
+  card: '#FFFFFF',
+  notification: '#FF1744',
+};
+
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -89,3 +115,15 @@ export const typography = {
     lineHeight: 20,
   },
 };
+
+export function getTheme(mode: ThemeMode) {
+  switch (mode) {
+    case 'dark':
+      return darkColors;
+    case 'field':
+      return fieldColors;
+    case 'light':
+    default:
+      return colors;
+  }
+}
