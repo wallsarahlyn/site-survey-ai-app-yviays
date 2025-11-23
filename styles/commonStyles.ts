@@ -1,27 +1,28 @@
 
 export type ThemeMode = 'light' | 'dark' | 'field';
 
+// Yellow/Solar/Roofing Contractor Theme
 export const colors = {
-  // Primary colors
-  primary: '#2563EB',
-  secondary: '#10B981',
-  accent: '#8B5CF6',
-  highlight: '#F59E0B',
+  // Primary colors - Warm yellows and golds for solar/roofing
+  primary: '#FDB913', // Bright solar yellow
+  secondary: '#FF8C00', // Dark orange (roofing accent)
+  accent: '#D4A72C', // Gold accent
+  highlight: '#FFD700', // Bright gold highlight
   success: '#10B981',
   error: '#EF4444',
   warning: '#F59E0B',
   info: '#3B82F6',
   
-  // Background colors
-  background: '#FFFFFF',
-  cardBackground: '#F9FAFB',
+  // Background colors - Light, warm tones
+  background: '#FFFBF0', // Warm off-white
+  cardBackground: '#FFF9E6', // Light cream
   
   // Text colors
-  text: '#111827',
-  textSecondary: '#6B7280',
+  text: '#2C2416', // Dark brown for contrast
+  textSecondary: '#6B5D47', // Medium brown
   
   // Border colors
-  border: '#E5E7EB',
+  border: '#E8D9B8', // Light tan border
   
   // Additional colors
   card: '#FFFFFF',
@@ -29,45 +30,45 @@ export const colors = {
 };
 
 export const darkColors = {
-  // Primary colors
-  primary: '#3B82F6',
-  secondary: '#10B981',
-  accent: '#A78BFA',
-  highlight: '#FBBF24',
+  // Primary colors - Adjusted for dark mode
+  primary: '#FDB913', // Keep bright yellow for visibility
+  secondary: '#FF8C00', // Dark orange
+  accent: '#D4A72C', // Gold accent
+  highlight: '#FFD700', // Bright gold
   success: '#10B981',
   error: '#EF4444',
   warning: '#F59E0B',
   info: '#60A5FA',
   
-  // Background colors
-  background: '#111827',
-  cardBackground: '#1F2937',
+  // Background colors - Dark with warm undertones
+  background: '#1A1612', // Very dark brown
+  cardBackground: '#2C2416', // Dark brown
   
   // Text colors
-  text: '#F9FAFB',
-  textSecondary: '#9CA3AF',
+  text: '#FFF9E6', // Light cream text
+  textSecondary: '#B8A888', // Tan text
   
   // Border colors
-  border: '#374151',
+  border: '#3D3426', // Dark tan border
   
   // Additional colors
-  card: '#1F2937',
+  card: '#2C2416',
   notification: '#EF4444',
 };
 
 export const fieldColors = {
   // Primary colors - High contrast for outdoor visibility
-  primary: '#FF6B00',
-  secondary: '#00C853',
-  accent: '#9C27B0',
-  highlight: '#FFD600',
+  primary: '#FDB913', // Bright yellow for visibility
+  secondary: '#FF6B00', // Bright orange
+  accent: '#FFD700', // Bright gold
+  highlight: '#FFED4E', // Very bright yellow
   success: '#00C853',
   error: '#FF1744',
   warning: '#FFD600',
   info: '#2196F3',
   
   // Background colors - Slightly tinted for reduced glare
-  background: '#F5F5DC',
+  background: '#FFF8DC', // Cornsilk - reduces glare
   cardBackground: '#FFFFFF',
   
   // Text colors - High contrast
@@ -75,7 +76,7 @@ export const fieldColors = {
   textSecondary: '#424242',
   
   // Border colors
-  border: '#BDBDBD',
+  border: '#D4A72C',
   
   // Additional colors
   card: '#FFFFFF',
